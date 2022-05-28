@@ -15,30 +15,7 @@ go version
 go version go1.17.6 darwin/amd64
 ```
 
-代码
-
-```go
-package main
-
-import (
-	"fmt"
-	"github.com/ethereum/go-ethereum/ethclient"
-	"log"
-)
-
-func main() {
-	client, err := ethclient.Dial("https://cloudflare-eth.com")
-	fmt.Println(client)
-	if err != nil {
-		log.Fatalf("Oops! There was a problem", err)
-	} else {
-		fmt.Println("Success! you are connected to the Ethereum Network")
-	}
-}
-```
-
 成功运行效果
-
 ```go
 go run client.go
 &{0xc0001a6000}
@@ -83,4 +60,29 @@ ethclient.Dial 参数是你的以太坊节点url。若您没有现有以太坊�
         go mod tidy
         # 去除
         ```
+
+# GoEthereumBook 02：初始化客户端
+
+### 课程内容1：获取ETH地址对应的Balance
+
+``` go
+client.BalanceAt(context.Background(), account, nil)
+```
+
+### 课程内容2：如何将Balance转换成eth币
+
+使用wei转换至币的方法：converWeiToBi
+
+### 课程内容3：如何根据地址和区块号，查询该区块号上的Balance
+
+这个部分还未实验成功。原因是我使用了infura的服务，他们查询存档服务是收费的。Todo 实验其他方式查询区块告诉的Balance
+
+### 本次添加的代码模块如下：
+
+```
+KovanTestEthValue := getBalanceFromAddress(*client, kovanTestEthAddress)
+func getBalanceFromAddress(client ethclient.Client, address string) *big.Float 
+func convertWeiToBi(balance *big.Int) (ethValue *big.Float) 
+
+```
 
