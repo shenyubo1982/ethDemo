@@ -40,8 +40,6 @@ ethclient.Dial 参数是你的以太坊节点url。若您没有现有以太坊�
     
     - 使用go的mod管理方式来下载包和管理
       
-        https://github.com/shenyubo1982/ethDemo/commit/c3e011105935466b04ea49d0f81b62e3c67a42c7
-        
         ```go
         go get github.com/ethereum/go-ethereum/ethclient
         vi go.mod
