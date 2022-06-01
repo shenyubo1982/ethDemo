@@ -25,6 +25,24 @@ func TestLaunch(t *testing.T) {
 	})
 }
 
+func TestCallContract(t *testing.T) {
+	t.Run("CAllContract", func(t *testing.T) {
+		t.Helper()
+		chainUrl := "http://172.17.4.13:7755"
+		ansClient, err := launch(chainUrl)
+		if ansClient == nil || err != nil {
+			t.Fatal("Can't get Client")
+		}
+		privateKeyHex := "794c479028076af7673a6941185af09a51c86a44082b438dbdfca70b6c6829ed"
+		contractAddressHex := "0x03Bc2D794B2FcDA47a9dBb1d43B1fA7B05260282"
+		title := "Title-goLang"
+		name := "bobo-go"
+		content := "content-by-golang"
+		callContract(*ansClient, contractAddressHex, privateKeyHex, title, name, content)
+
+	})
+}
+
 func TestDo(t *testing.T) {
 	t.Run("Do", func(t *testing.T) {
 		t.Helper()
