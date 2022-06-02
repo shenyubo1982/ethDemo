@@ -1,33 +1,19 @@
-package main
+package chainClient
 
 import (
 	"context"
 	"crypto/ecdsa"
-	evidencecountract "ethDemo/abi"
+	evidencecontract "ethDemo/abi"
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"io/ioutil"
 	"log"
 	"math"
 	"math/big"
 	"reflect"
 )
-
-// ReadAbi
-//  @Description: abi文件读取
-//  @param filePath abi File path & File name, ex. folder/filename.abi
-//  @return string abi file body.
-//
-func ReadAbi(filePath string) string {
-	f, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		fmt.Println("read fail", err)
-	}
-	return string(f)
-}
 
 //
 //  convertWeiToValue
@@ -39,23 +25,24 @@ func convertWeiToValue(balance *big.Int) (ethValue *big.Float) {
 	fbalance := new(big.Float)
 	fbalance.SetString(balance.String())
 	ethValue = new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(18)))
+	log.Printf("Value is : %v", ethValue)
 	return ethValue
 }
 
-func getBalanceFromAddress(client ethclient.Client, address string) *big.Float {
+func GetBalanceFromAddress(client ethclient.Client, address string) *big.Float {
 	account := common.HexToAddress(address)
 	balance, err := client.BalanceAt(context.Background(), account, nil)
 	if err != nil {
 		panic(err)
 	}
+	log.Printf("balance is : %v", balance)
 	return convertWeiToValue(balance)
 }
 
-func getBalanceFromBlockNum(client ethclient.Client, address string, blockNum int64) *big.Float {
-	print(blockNum)
+func GetBalanceFromBlockNum(client ethclient.Client, address string, blockNum int64) *big.Float {
 	account := common.HexToAddress(address)
 	blockNumber := big.NewInt(blockNum)
-	print(blockNumber)
+	log.Printf("blockNum is : %v", blockNumber)
 	balance, err := client.BalanceAt(context.Background(), account, blockNumber)
 	if err != nil {
 		panic(err)
@@ -63,18 +50,17 @@ func getBalanceFromBlockNum(client ethclient.Client, address string, blockNum in
 	return convertWeiToValue(balance)
 }
 
-//
-//  callContract
+// CallContract
 //  @Description: 调用区块链网络上的已部署成功的合约和方法
-//  @param client
+//  @param chainClient
 //  @param addressHex
 //  @param privateKeyHex
 //  @param title
 //  @param name
 //  @param content
 //
-func callContract(client ethclient.Client, addressHex string, privateKeyHex string, title string, name string, content string) {
-	// 2. put in your test private key, make sure it has bsc testnet BNB
+func CallContract(client ethclient.Client, addressHex string, privateKeyHex string, title string, name string, content string) {
+	// 2. put in your testing private key, make sure it has bsc testnet BNB
 	privateKey, err := crypto.HexToECDSA(privateKeyHex)
 	if err != nil {
 		log.Fatal(err)
@@ -90,11 +76,11 @@ func callContract(client ethclient.Client, addressHex string, privateKeyHex stri
 
 	// 3. contract address
 	address := common.HexToAddress(addressHex)
-	abi := ReadAbi("./abi/EvidenceContract.abi")
-	fmt.Println(abi)
-	fmt.Println(address)
+	//abi := ReadAbi("./abi/EvidenceContract.abi")
+	//fmt.Println(abi)
+	//fmt.Println(address)
 
-	instance, err := evidencecountract.NewEvidencecountract(address, &client)
+	instance, err := evidencecontract.NewEvidencecontract(address, &client)
 	if err != nil {
 		panic(err)
 	}
@@ -103,8 +89,7 @@ func callContract(client ethclient.Client, addressHex string, privateKeyHex stri
 		log.Fatal(err)
 	}
 
-	auth.GasLimit = 8100000
-	//auth.GasPrice = 1000000000
+	auth.GasLimit = 9999999
 	auth.GasPrice = big.NewInt(1000000000)
 
 	transactOpts := &bind.TransactOpts{
@@ -126,14 +111,13 @@ func callContract(client ethclient.Client, addressHex string, privateKeyHex stri
 	log.Printf("tx sent: %s", tx.Hash().Hex())
 }
 
-//
-//  launch
+// Launch
 //  @Description: 启动区块链连接，返回网络客户端对象
 //  @param chainUrl
 //  @return *ethclient.Client
 //  @return error
 //
-func launch(chainUrl string) (*ethclient.Client, error) {
+func Launch(chainUrl string) (*ethclient.Client, error) {
 	client, err := ethclient.Dial(chainUrl)
 	fmt.Printf("Type %v is %v \n", reflect.TypeOf(client), client)
 	if err != nil {
@@ -143,8 +127,4 @@ func launch(chainUrl string) (*ethclient.Client, error) {
 		fmt.Println("Success! you are connected to the Ethereum Network")
 		return client, nil
 	}
-}
-
-func main() {
-	fmt.Println("I'm Main, Over.")
 }

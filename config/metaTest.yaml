@@ -1,0 +1,11 @@
+chainUrl: http://172.17.4.13:7755
+contractAddressHex: 0x03Bc2D794B2FcDA47a9dBb1d43B1fA7B05260282
+adminAddressHex:
+adminPrivateKeyHex: 794c479028076af7673a6941185af09a51c86a44082b438dbdfca70b6c6829ed
+chainID: 77
+abi: ./abi/EvidenceContract.abixxxxxx
+gasLimit : 9999999
+gasPrice : 1000000000
+
+
+

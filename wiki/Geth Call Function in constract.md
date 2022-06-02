@@ -79,7 +79,7 @@
         # EvidenceContract.abi是你部署后获得的abi文件，放在你的go项目目录下。
         # evidencecountract 是合约名称的包名（这里故意使用错别字 country ，为了更好地演示代码中哪里可以使用它！）
         # 细心的你会发现：在我们的go项目中，可以这样使用它
-        # instance, err := evidencecountract.NewEvidencecountract(address, &client)
+        # instance, err := evidencecountract.NewEvidencecountract(address, &chainClient)
         # EvidenceContract.go 是生成的结果文件，放在你的go项目中。
         ```
     
