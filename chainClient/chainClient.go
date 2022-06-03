@@ -4,16 +4,23 @@ import (
 	"context"
 	"crypto/ecdsa"
 	evidencecontract "ethDemo/abi"
+	"ethDemo/util"
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"golang.org/x/crypto/sha3"
 	"log"
 	"math"
 	"math/big"
-	"reflect"
 )
+
+type chainClient struct {
+	chainConfig util.YamlContent
+	client      *ethclient.Client
+}
 
 //
 //  convertWeiToValue
@@ -59,28 +66,26 @@ func GetBalanceFromBlockNum(client ethclient.Client, address string, blockNum in
 //  @param name
 //  @param content
 //
-func CallContract(client ethclient.Client, addressHex string, privateKeyHex string, title string, name string, content string) {
+func (cc *chainClient) CallContract(title string, name string, content string) {
 	// 2. put in your testing private key, make sure it has bsc testnet BNB
-	privateKey, err := crypto.HexToECDSA(privateKeyHex)
+	privateKey, err := crypto.HexToECDSA(cc.chainConfig.AdminPrivateKeyHex)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	publicKey := privateKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
 	if !ok {
 		log.Fatal("cannot assert type: publicKey is not of type *ecdsa.PublicKey")
 	}
-
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
 
 	// 3. contract address
-	address := common.HexToAddress(addressHex)
+	address := common.HexToAddress(cc.chainConfig.ContractAddressHex)
 	//abi := ReadAbi("./abi/EvidenceContract.abi")
 	//fmt.Println(abi)
 	//fmt.Println(address)
 
-	instance, err := evidencecontract.NewEvidencecontract(address, &client)
+	instance, err := evidencecontract.NewEvidencecontract(address, cc.client)
 	if err != nil {
 		panic(err)
 	}
@@ -91,6 +96,8 @@ func CallContract(client ethclient.Client, addressHex string, privateKeyHex stri
 
 	auth.GasLimit = 9999999
 	auth.GasPrice = big.NewInt(1000000000)
+	//auth.GasLimit = 9999999
+	//auth.GasPrice = big.NewInt(1000000000)
 
 	transactOpts := &bind.TransactOpts{
 		From:   fromAddress,
@@ -111,20 +118,59 @@ func CallContract(client ethclient.Client, addressHex string, privateKeyHex stri
 	log.Printf("tx sent: %s", tx.Hash().Hex())
 }
 
+func (cc *chainClient) getBlockNumber() string {
+	header, err := cc.client.HeaderByNumber(context.Background(), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(header.Number.String()) // 5671744
+	return header.Number.String()
+}
+
+func creatAccount() {
+	privateKey, err := crypto.GenerateKey()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	privateKeyBytes := crypto.FromECDSA(privateKey)
+	fmt.Println(hexutil.Encode(privateKeyBytes)[2:]) // 0xfad9c8855b740a0b7ed4c221dbad0f33a83a49cad6b3fe8d5817ac83d38b6a19
+
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		log.Fatal("cannot assert type: publicKey is not of type *ecdsa.PublicKey")
+	}
+
+	publicKeyBytes := crypto.FromECDSAPub(publicKeyECDSA)
+	fmt.Println(hexutil.Encode(publicKeyBytes)[4:]) // 0x049a7df67f79246283fdc93af76d4f8cdd62c4886e8cd870944e817dd0b97934fdd7719d0810951e03418205868a5c1b40b192451367f28e0088dd75e15de40c05
+
+	address := crypto.PubkeyToAddress(*publicKeyECDSA).Hex()
+	fmt.Println(address) // 0x96216849c49358B10257cb55b28eA603c874b05E
+
+	hash := sha3.NewLegacyKeccak256()
+	hash.Write(publicKeyBytes[1:])
+	fmt.Println(hexutil.Encode(hash.Sum(nil)[12:])) // 0x96216849c49358b10257cb55b28ea603c874b05e
+}
+
 // Launch
 //  @Description: 启动区块链连接，返回网络客户端对象
 //  @param chainUrl
 //  @return *ethclient.Client
 //  @return error
 //
-func Launch(chainUrl string) (*ethclient.Client, error) {
-	client, err := ethclient.Dial(chainUrl)
-	fmt.Printf("Type %v is %v \n", reflect.TypeOf(client), client)
+func Launch(myChainConfig util.YamlContent) *chainClient {
+	instance := new(chainClient)
+	instance.chainConfig = myChainConfig
+	//chainUrl = myChainConfig.yamlContent.ChainUrl
+	client, err := ethclient.Dial(instance.chainConfig.ChainUrl)
+	//fmt.Printf("Type %v is %v \n", reflect.TypeOf(client), client)
 	if err != nil {
 		log.Fatalf("Oops! There was a problem %v", err)
-		return nil, err
+		return nil
 	} else {
-		fmt.Println("Success! you are connected to the Ethereum Network")
-		return client, nil
+		//fmt.Println("Success! you are connected to the Ethereum Network")
+		instance.client = client
+		return instance
 	}
 }

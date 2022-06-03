@@ -111,7 +111,7 @@ func convertWeiToBi(balance *big.Int) (ethValue *big.Float)
 - 交易
   - 转账（from to) 
   - 合约调用（合约方法和参数可以泛型代入）
-  - ==NFT相关功能部分还不明白，待确认==。
+  - NFT相关功能部分还不明白，待确认。
 - 共识
 - 性能
 

@@ -14,8 +14,8 @@ const ConfigFile = "metaTest.yaml"
 func TestLoad(t *testing.T) {
 	t.Run("LoadConfigFile", func(t *testing.T) {
 		t.Helper()
-		myChainConfig := Load(ConfigFile)
-		if myChainConfig.ChainUrl != "http://172.17.4.13:7755" {
+		myChainConfig := NewChainTestYaml(ConfigFile)
+		if myChainConfig.YamlContent.ChainUrl != "http://172.17.4.13:7755" {
 			t.Fatal("Value is not correct! ")
 		}
 	})
