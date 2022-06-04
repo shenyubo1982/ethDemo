@@ -58,7 +58,7 @@ func GetBalanceFromBlockNum(client ethclient.Client, address string, blockNum in
 }
 
 // CallContract
-//  @Description: 调用区块链网络上的已部署成功的合约和方法
+//  @Description: 调用区块链网络上的已部署成功的合约和方法， 返回调用合约的交易hax（hex)
 //  @param chainClient
 //  @param addressHex
 //  @param privateKeyHex
@@ -66,7 +66,7 @@ func GetBalanceFromBlockNum(client ethclient.Client, address string, blockNum in
 //  @param name
 //  @param content
 //
-func (cc *chainClient) CallContract(title string, name string, content string) {
+func (cc *chainClient) CallContract(title string, name string, content string) string {
 	// 2. put in your testing private key, make sure it has bsc testnet BNB
 	privateKey, err := crypto.HexToECDSA(cc.chainConfig.AdminPrivateKeyHex)
 	if err != nil {
@@ -110,12 +110,12 @@ func (cc *chainClient) CallContract(title string, name string, content string) {
 		Context:  auth.Context,
 		NoSend:   false,
 	}
-
 	tx, err := instance.AddInfo(transactOpts, title, name, content)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("tx sent: %s", tx.Hash().Hex())
+	//log.Printf("tx sent: %s", tx.Hash().Hex())
+	return tx.Hash().Hex()
 }
 
 func (cc *chainClient) getBlockNumber() string {
@@ -162,14 +162,11 @@ func creatAccount() {
 func Launch(myChainConfig util.YamlContent) *chainClient {
 	instance := new(chainClient)
 	instance.chainConfig = myChainConfig
-	//chainUrl = myChainConfig.yamlContent.ChainUrl
 	client, err := ethclient.Dial(instance.chainConfig.ChainUrl)
-	//fmt.Printf("Type %v is %v \n", reflect.TypeOf(client), client)
 	if err != nil {
 		log.Fatalf("Oops! There was a problem %v", err)
 		return nil
 	} else {
-		//fmt.Println("Success! you are connected to the Ethereum Network")
 		instance.client = client
 		return instance
 	}

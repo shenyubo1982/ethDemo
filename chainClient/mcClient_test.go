@@ -1,167 +1,184 @@
 package chainClient
 
+// chain 链测试 package
 import (
 	"ethDemo/util"
 	"fmt"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"log"
 	"os"
-	"reflect"
 	"testing"
 )
 
-// test to meta in chain with laboratory
-const ConfigFile = "metaTest.yaml"
-const blockInfoRequestUrl = "http://testing-metain-js-official-node-service.jiansutech.com/api/mt/getInfo"
+// t.Error t.Errorf :错误不停止继续进行test
+// t.Fatal t.Fatalf :遇错即停
 
-// 通用的业务测试功能
-type ChainOptionTest interface {
-	CheckBlockNum(t *testing.T)
-	IsConnected(t *testing.T)
-	CallContract(t *testing.T)
-	CheckChainNum(t *testing.T)
-}
-
-// 元生链 实验室 测试
+// meta in chain 实验室用例类
 type MetaChainLabTest struct {
+	// 测试用例中需要使用的常量，可以在这边先定义变量名称。在NewXXXX中，用的常量内容。
+	ConfigFile          string // "metaTest.yaml"
+	blockInfoRequestUrl string //"http://testing-metain-js-official-node-service.jiansutech.com/api/mt/getInfo"
 }
 
-func (metaChainLab MetaChainLabTest) CheckChainNum(t *testing.T) {
-	myChainConfig := util.NewChainTestYaml(ConfigFile)
-	myChainClient := Launch(myChainConfig.YamlContent)
-	if myChainClient == nil {
-		t.Errorf("Can't get Client")
-	}
-
-	nowBlockNum := myChainClient.getBlockNumber()
-	responseBody, _, _ := util.WebGetRequest(blockInfoRequestUrl)
-	if responseBody == nil {
-		t.Errorf("blockNum in chain is %v\nblockNum in web si %v ", nowBlockNum, nil)
-	}
-
-	var getInfoJson = util.GetInfoJson{}
-	webBlockNum := util.ConvertBody2Json(responseBody, getInfoJson, "BlockNumber")
-	if nowBlockNum != webBlockNum {
-		t.Errorf("blockNum in chain is %v\nblockNum in web si %v ", nowBlockNum, webBlockNum)
-	}
-
+// 测试用例的构造器(在运行单独测试用例时，必须先构造生成测试实例 , 测试用例需要用到的个性配置可以在此处通过变量的方式预存)
+func NewMetaChainLabTest() *MetaChainLabTest {
+	instance := new(MetaChainLabTest)
+	//预存测试过程中需要使用的配置
+	instance.ConfigFile = "metaTest.yaml"
+	instance.blockInfoRequestUrl = "http://testing-metain-js-official-node-service.jiansutech.com/api/mt/getInfo"
+	return instance
 }
 
-func (metaChainLab MetaChainLabTest) CheckBlockNum(t *testing.T) {
+func (ct MetaChainLabTest) Transact(t *testing.T) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (metaChainLab MetaChainLabTest) CallContract(t *testing.T) {
-	myChainConfig := util.NewChainTestYaml(ConfigFile)
+func (ct MetaChainLabTest) CreateAccount(t *testing.T) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (ct MetaChainLabTest) PressureAttack(t *testing.T) {
+	//TODO implement me
+	panic("implement me")
+}
+
+//
+//  CheckChainNum
+//  @Description: 测试区块链高度是否显示正常。
+// 	测试用例逻辑：获取区块链最新区块num，与区块链浏览器中显示的区块链最新区块链是否一致。
+//  @ct MetaChainLabTest
+//
+func (ct MetaChainLabTest) CheckChainNum(t *testing.T) {
+	//连接区块链
+	myChainConfig := util.NewChainTestYaml(ct.ConfigFile)
+	myChainClient := Launch(myChainConfig.YamlContent)
+	if myChainClient == nil {
+		t.Errorf("Can't get Client")
+	}
+	// 获取区块链上的最新区块高度
+	nowBlockNum := myChainClient.getBlockNumber()
+	responseBody, _, _ := util.WebGetRequest(ct.blockInfoRequestUrl)
+	if responseBody == nil {
+		t.Errorf("blockNum in chain is %v\nblockNum in web si %v ", nowBlockNum, nil)
+	}
+	//调用接口浏览器使用的接口，获取最新区块高度信息
+	var getInfoJson = util.GetInfoJson{}
+	webBlockNum := util.ConvertBody2Json(responseBody, getInfoJson, "BlockNumber")
+	//比较区块高度时是否一致
+	if nowBlockNum != webBlockNum {
+		t.Errorf("blockNum in chain is %v\nblockNum in web si %v ", nowBlockNum, webBlockNum)
+	}
+}
+
+//
+//  CallContract
+//  @Description:
+//  @receiver ct
+//  @param t
+//
+func (ct MetaChainLabTest) CallContract(t *testing.T) {
+	//连接区块链
+	myChainConfig := util.NewChainTestYaml(ct.ConfigFile)
 	myChainClient := Launch(myChainConfig.YamlContent)
 	if myChainClient == nil {
 		t.Errorf("Can't get Client")
 	}
 
+	//根据业务内容，设定此次调用合约需要的参数
 	title := "Title-goLang"
 	name := "bobo-go"
 	content := "content-by-golang"
-	//myChainClient.CallContract(*myChainClient, myChainConfig.ContractAddressHex, myChainConfig.AdminPrivateKeyHex, title, name, content)
-	myChainClient.CallContract(title, name, content)
 
+	//myChainClient.CallContract(*myChainClient, myChainConfig.ContractAddressHex, myChainConfig.AdminPrivateKeyHex, title, name, content)
+	transactHash := myChainClient.CallContract(title, name, content)
+	if transactHash == "" {
+		t.Errorf("交易失败，没有获取交易hash")
+	} else {
+		fmt.Printf("call contract succeed. hash is %v\n", transactHash)
+	}
+	//TODO 应该再根据交易has去链上验证交易内容。（交易查询功能还未实现，可以放在chainClient类中,作为基础功能来实现后，此处作为业务测试用例进行调用）
 }
 
-func (metaChainLab MetaChainLabTest) IsConnected(t *testing.T) {
-	myChainConfig := util.NewChainTestYaml(ConfigFile)
+//
+//  IsConnected
+//  @Description: 区块链网络连接测试
+//  @receiver ct
+//  @param t
+//
+func (ct MetaChainLabTest) IsConnected(t *testing.T) bool {
+	//连接区块链
+	myChainConfig := util.NewChainTestYaml(ct.ConfigFile)
 	myChainClient := Launch(myChainConfig.YamlContent)
 	if myChainClient == nil {
 		t.Errorf("Can't get Client")
+		return false
 	}
+	return true
+}
 
-	//myChainConfig := util.LoadConfig(ConfigFile)
-	////println(myChainConfig.ChainUrl)
-	//ansClient, err := Launch(myChainConfig.ChainUrl)
-	//if ansClient == nil || err != nil {
-	//	t.Errorf("Can't get Client")
-	//}
+func (ct MetaChainLabTest) mySelfTestFunc(t *testing.T) {
+	infuraKovanUrl := "https://kovan.infura.io/v3/3f97ae7214cc4e2794bee5bdc3bd6b95"
+	client, err := ethclient.Dial(infuraKovanUrl)
+	if err != nil {
+		log.Fatalf("Oops! There was a problem %v", err)
+		os.Exit(100)
+	} else {
+		fmt.Println("Success! you are connected to the Ethereum Network")
+	}
+	kovanTestEthAddress := "0x1D9b2905b2EC7d9F64022c6e698c0d622A35225c"
+	KovanTestEthValue := GetBalanceFromAddress(*client, kovanTestEthAddress)
+	fmt.Printf("myAddress is %v,it's Eth Value in Kovan Testnet is %v\n", kovanTestEthAddress, KovanTestEthValue)
+
+	// 根据账户地址和区块高度查询，区块交易的金额。 这个功能需要https://infura.io/dashboard 中购买 archive Data 功能才能调用api
+	//KovanTestEthBlockNums := []int64{31866217, 31866202}
+	//KovanTestEthValueAtBlock := getBalanceFromBlockNum(*chainClient, kovanTestEthAddress, KovanTestEthBlockNums[0])
+	//fmt.Printf("myAddress is %v,it's in %v BlockNumber ,and Kovan Testnet is %v\n", kovanTestEthAddress, KovanTestEthBlockNums[0], KovanTestEthValueAtBlock)
+
 }
 
 //
 //  TestLaunch
-//  @Description: 区块链网络连接测试
+//  @Description: 区块链网络连接测试用例逻辑
 //  @param t
 //
-func TestLaunch(t *testing.T) {
-	t.Run("Launch", func(t *testing.T) {
+func TestLaunchMetaLab(t *testing.T) {
+	t.Run("TestLaunchMetaLab", func(t *testing.T) {
 		t.Helper()
-		var metaChainOptionTest ChainOptionTest
-		metaChainOptionTest = new(MetaChainLabTest)
-		metaChainOptionTest.IsConnected(t)
+		var metaChainOptionTest ChainTestingCase
+		metaChainOptionTest = NewMetaChainLabTest()
+		astRet := metaChainOptionTest.IsConnected(t)
+		if astRet != true {
+			t.Errorf("应该 %v , 结果为 %v\n ", true, astRet)
+		}
 	})
 }
 
-//
-//  TestGetBlockNumber
+//Test开始的是测试用例，用go test 工具会执行的测试用例。
+//  TestChainNumMetaLab 链上最新区块高度,
 //  @Description:
 //  @param t
 //
-func TestGetBlockNumber(t *testing.T) {
-	t.Run("GetBlockNumber", func(t *testing.T) {
+func TestChainNumMetaLab(t *testing.T) {
+	t.Run("TestChainNumMetaLab", func(t *testing.T) {
 		t.Helper()
-		var metaChainOptionTest ChainOptionTest
-		metaChainOptionTest = new(MetaChainLabTest)
+		var metaChainOptionTest ChainTestingCase
+		metaChainOptionTest = NewMetaChainLabTest()
 		metaChainOptionTest.CheckChainNum(t)
 	})
 }
 
-func TestCallContract(t *testing.T) {
-	t.Run("CAllContract", func(t *testing.T) {
+//Test开始的是测试用例，用go test 工具会执行的测试用例。
+//  TestCallContractMetaLab 调用智能合约方法
+//  @Description:
+//  @param t
+//
+func TestCallContractMetaLab(t *testing.T) {
+	t.Run("TestCallContractMetaLab", func(t *testing.T) {
 		t.Helper()
-
-		var metaChainOptionTest ChainOptionTest
-		metaChainOptionTest = new(MetaChainLabTest)
+		var metaChainOptionTest ChainTestingCase
+		metaChainOptionTest = NewMetaChainLabTest()
 		metaChainOptionTest.CallContract(t)
-		//chainUrl := "http://172.17.4.13:7755"
-		//ansClient, err := Launch(chainUrl)
-		//if ansClient == nil || err != nil {
-		//	t.Fatal("Can't get Client")
-		//}
-		//privateKeyHex := "794c479028076af7673a6941185af09a51c86a44082b438dbdfca70b6c6829ed"
-		//contractAddressHex := "0x03Bc2D794B2FcDA47a9dBb1d43B1fA7B05260282"
-		//title := "Title-goLang"
-		//name := "bobo-go"
-		//content := "content-by-golang"
-		//CallContract(*ansClient, contractAddressHex, privateKeyHex, title, name, content)
-
-	})
-}
-
-func TestDo(t *testing.T) {
-	t.Run("Do", func(t *testing.T) {
-		t.Helper()
-		//chainClient, err := ethclient.Dial("ADD_YOUR_ETHEREUM_NODE_URL")
-		//chainClient, err := ethclient.Dial("https://cloudflare-eth.com")
-		// 教程中使用了cloudflare-ech.com
-		// 也可以使用自己的eth节点，这里我们尝试使用infura的免费服务。infura 需要新建项目，并且配置相应的测试网络和网络节点url。
-		//https://infura.io/dashboard/ethereum/3f97ae7214cc4e2794bee5bdc3bd6b95/settings
-		// Details > KEYS > ENDPOINTS (KOVAN) > https://kovan.infura.io/v3/<projectkey>
-		// kovan 测试网络中的测试币可以通过水龙头领取
-		infuraKovanUrl := "https://kovan.infura.io/v3/3f97ae7214cc4e2794bee5bdc3bd6b95"
-		client, err := ethclient.Dial(infuraKovanUrl)
-		//chainClient, err := ethclient.Dial("wss://mainnet.infura.io/ws/v3/3f97ae7214cc4e2794bee5bdc3bd6b95")
-		fmt.Printf("Type %v is %v \n", reflect.TypeOf(client), client)
-		if err != nil {
-			log.Fatalf("Oops! There was a problem %v", err)
-			os.Exit(100)
-		} else {
-			fmt.Println("Success! you are connected to the Ethereum Network")
-		}
-		myAddress := "0x71c7656ec7ab88b098defb751b7401b5f6d8976f"
-		kovanTestEthAddress := "0x1D9b2905b2EC7d9F64022c6e698c0d622A35225c"
-		myAddressEthValue := GetBalanceFromAddress(*client, myAddress)
-		KovanTestEthValue := GetBalanceFromAddress(*client, kovanTestEthAddress)
-		fmt.Printf("myAddress is %v,it's Eth Value in Kovan Testnet is %v\n", myAddress, myAddressEthValue)
-		fmt.Printf("myAddress is %v,it's Eth Value in Kovan Testnet is %v\n", kovanTestEthAddress, KovanTestEthValue)
-
-		// 根据账户地址和区块高度查询，区块交易的金额。 这个功能需要https://infura.io/dashboard 中购买 archive Data 功能才能调用api
-		//KovanTestEthBlockNums := []int64{31866217, 31866202}
-		//KovanTestEthValueAtBlock := getBalanceFromBlockNum(*chainClient, kovanTestEthAddress, KovanTestEthBlockNums[0])
-		//fmt.Printf("myAddress is %v,it's in %v BlockNumber ,and Kovan Testnet is %v\n", kovanTestEthAddress, KovanTestEthBlockNums[0], KovanTestEthValueAtBlock)
 	})
 }

@@ -21,9 +21,9 @@ func WebGetRequest(requestUrl string) (body []byte, statusCode int, err error) {
 		log.Fatalf("Error is %v", err2)
 		return nil, resp.StatusCode, err2
 	}
-	if resp.StatusCode == 200 {
-		log.Printf("request %v is Done![%v]\n", requestUrl, "OK")
-	}
+	//if resp.StatusCode == 200 {
+	//	log.Printf("request %v is Done![%v]\n", requestUrl, "OK")
+	//}
 	return body, resp.StatusCode, err
 }
 
