@@ -31,7 +31,21 @@ func NewMetaChainLabTest() *MetaChainLabTest {
 
 func (ct MetaChainLabTest) Transact(t *testing.T) {
 	//TODO implement me
-	panic("implement me")
+	//连接区块链
+	myChainConfig := util.NewChainTestYaml(ct.ConfigFile)
+	myChainClient := Launch(myChainConfig.YamlContent)
+	if myChainClient == nil {
+		t.Errorf("Can't get Client")
+	}
+
+	//get a test AAccount
+	keyDir := "../keys/mt"
+	iWantCnt := 1
+	cas := LoadChainAccount(iWantCnt, keyDir)
+	priKeyHex := myChainClient.chainConfig.AdminPrivateKeyHex
+	toAddressHex := cas.accounts[0].address.Hex()
+	price := int64(1000000000000000000) // in wei (1 eth)
+	myChainClient.transferExchange(priKeyHex, toAddressHex, price)
 }
 
 //
@@ -42,31 +56,12 @@ func (ct MetaChainLabTest) Transact(t *testing.T) {
 //  @param t
 //
 func (ct MetaChainLabTest) CreateAccount(newCount int, t *testing.T) {
-	////连接区块链
-	//myChainConfig := util.NewChainTestYaml(ct.ConfigFile)
-	//myChainClient := Launch(myChainConfig.YamlContent)
-	//// 配置保存 key store 的目录
-	//myChainClient.SetKeyStoreDir("../keys/mt")
-	//if myChainClient == nil {
-	//	t.Errorf("Can't get Client")
-	//}
-	//myChainClient.CreateKs()
-	//
-	////	验证开始
-	//keyFiles := myChainClient.ShowKs()
-	//accountsAddress := make([]string, 10)
-	//for _, file := range keyFiles {
-	//	address, isExisted := myChainClient.GetAccount(file)
-	//	// 如果文件读取成功
-	//	if isExisted {
-	//		accountsAddress = append(accountsAddress, address)
-	//	}
-	//}
-	//createdAccountCount := len(accountsAddress)
-	//if createdAccountCount != newCount {
-	//	t.Errorf("预计创建 %v个账号，实际创建 %v个", newCount, createdAccountCount)
-	//}
-
+	keyDir := "../keys/mt"
+	iWantCnt := newCount
+	cas := LoadChainAccount(iWantCnt, keyDir)
+	if cas.cnt != iWantCnt {
+		t.Errorf("生成Account 错误！应该是%v ，实际是 %v", iWantCnt, cas.cnt)
+	}
 }
 
 func (ct MetaChainLabTest) PressureAttack(t *testing.T) {
@@ -219,5 +214,19 @@ func TestCallContractMetaLab(t *testing.T) {
 		var metaChainOptionTest ChainTestingCase
 		metaChainOptionTest = NewMetaChainLabTest()
 		metaChainOptionTest.CallContract(t)
+	})
+}
+
+//Test开始的是测试用例，用go test 工具会执行的测试用例。
+//  TestTransactExchange 转账
+//  @Description:
+//  @param t
+//
+func TestTransactExchange(t *testing.T) {
+	t.Run("TestTransactExchange", func(t *testing.T) {
+		t.Helper()
+		var metaChainOptionTest ChainTestingCase
+		metaChainOptionTest = NewMetaChainLabTest()
+		metaChainOptionTest.Transact(t)
 	})
 }

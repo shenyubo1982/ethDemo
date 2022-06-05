@@ -8,10 +8,9 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"golang.org/x/crypto/sha3"
 	"log"
 	"math"
 	"math/big"
@@ -129,11 +128,6 @@ func (cc *chainClient) CallContract(title string, name string, content string) s
 	return tx.Hash().Hex()
 }
 
-//创建钱包
-func (cc *chainClient) createNewWallet() {
-	fmt.Println("create new Wallate")
-}
-
 func (cc *chainClient) getBlockNumber() string {
 	header, err := cc.client.HeaderByNumber(context.Background(), nil)
 	if err != nil {
@@ -143,14 +137,20 @@ func (cc *chainClient) getBlockNumber() string {
 	return header.Number.String()
 }
 
-func creatAccount() {
-	privateKey, err := crypto.GenerateKey()
+//
+//  transferExchange Todo
+//  @Description: 发起交易(转账)
+//  @receiver cc 链客户端
+//  @param fromAccount 发起交易方
+//  @param toAddress 交易目的
+//  @param price
+//
+func (cc *chainClient) transferExchange(priKeyHex string, toAddressHex string, price int64) {
+
+	privateKey, err := crypto.HexToECDSA(priKeyHex)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	privateKeyBytes := crypto.FromECDSA(privateKey)
-	fmt.Println(hexutil.Encode(privateKeyBytes)[2:]) // 0xfad9c8855b740a0b7ed4c221dbad0f33a83a49cad6b3fe8d5817ac83d38b6a19
 
 	publicKey := privateKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
@@ -158,15 +158,40 @@ func creatAccount() {
 		log.Fatal("cannot assert type: publicKey is not of type *ecdsa.PublicKey")
 	}
 
-	publicKeyBytes := crypto.FromECDSAPub(publicKeyECDSA)
-	fmt.Println(hexutil.Encode(publicKeyBytes)[4:]) // 0x049a7df67f79246283fdc93af76d4f8cdd62c4886e8cd870944e817dd0b97934fdd7719d0810951e03418205868a5c1b40b192451367f28e0088dd75e15de40c05
+	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+	nonce, err := cc.client.PendingNonceAt(context.Background(), fromAddress)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	address := crypto.PubkeyToAddress(*publicKeyECDSA).Hex()
-	fmt.Println(address) // 0x96216849c49358B10257cb55b28eA603c874b05E
+	//value := big.NewInt(1000000000000000000) // in wei (1 eth)
+	value := big.NewInt(price) // in wei (1 eth)
+	gasLimit := uint64(21000)  // in units
+	gasPrice, err := cc.client.SuggestGasPrice(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	hash := sha3.NewLegacyKeccak256()
-	hash.Write(publicKeyBytes[1:])
-	fmt.Println(hexutil.Encode(hash.Sum(nil)[12:])) // 0x96216849c49358b10257cb55b28ea603c874b05e
+	toAddress := common.HexToAddress(toAddressHex)
+	var data []byte
+	tx := types.NewTransaction(nonce, toAddress, value, gasLimit, gasPrice, data)
+
+	chainID, err := cc.client.NetworkID(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privateKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = cc.client.SendTransaction(context.Background(), signedTx)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("tx sent: %s", signedTx.Hash().Hex())
 }
 
 // Launch
