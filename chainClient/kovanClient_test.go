@@ -46,7 +46,7 @@ func (k EthKovanTest) Transact(t *testing.T) {
 	panic("implement me")
 }
 
-func (k EthKovanTest) CreateAccount(t *testing.T) {
+func (k EthKovanTest) CreateAccount(newCount int, t *testing.T) {
 	//TODO implement me
 	panic("implement me")
 }

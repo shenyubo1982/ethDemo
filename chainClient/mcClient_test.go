@@ -34,9 +34,39 @@ func (ct MetaChainLabTest) Transact(t *testing.T) {
 	panic("implement me")
 }
 
-func (ct MetaChainLabTest) CreateAccount(t *testing.T) {
-	//TODO implement me
-	panic("implement me")
+//
+//  CreateAccount
+//  @Description: 创建n个账号，并保存在store中
+//  @receiver ct
+//  @param newCount
+//  @param t
+//
+func (ct MetaChainLabTest) CreateAccount(newCount int, t *testing.T) {
+	////连接区块链
+	//myChainConfig := util.NewChainTestYaml(ct.ConfigFile)
+	//myChainClient := Launch(myChainConfig.YamlContent)
+	//// 配置保存 key store 的目录
+	//myChainClient.SetKeyStoreDir("../keys/mt")
+	//if myChainClient == nil {
+	//	t.Errorf("Can't get Client")
+	//}
+	//myChainClient.CreateKs()
+	//
+	////	验证开始
+	//keyFiles := myChainClient.ShowKs()
+	//accountsAddress := make([]string, 10)
+	//for _, file := range keyFiles {
+	//	address, isExisted := myChainClient.GetAccount(file)
+	//	// 如果文件读取成功
+	//	if isExisted {
+	//		accountsAddress = append(accountsAddress, address)
+	//	}
+	//}
+	//createdAccountCount := len(accountsAddress)
+	//if createdAccountCount != newCount {
+	//	t.Errorf("预计创建 %v个账号，实际创建 %v个", newCount, createdAccountCount)
+	//}
+
 }
 
 func (ct MetaChainLabTest) PressureAttack(t *testing.T) {
@@ -166,6 +196,15 @@ func TestChainNumMetaLab(t *testing.T) {
 		var metaChainOptionTest ChainTestingCase
 		metaChainOptionTest = NewMetaChainLabTest()
 		metaChainOptionTest.CheckChainNum(t)
+	})
+}
+
+func TestCreateAccount(t *testing.T) {
+	t.Run("TestCreateAccount", func(t *testing.T) {
+		t.Helper()
+		var metaChainOptionTest ChainTestingCase
+		metaChainOptionTest = NewMetaChainLabTest()
+		metaChainOptionTest.CreateAccount(2, t)
 	})
 }
 

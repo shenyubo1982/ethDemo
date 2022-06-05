@@ -17,9 +17,20 @@ import (
 	"math/big"
 )
 
+const PathSymbol = "/"
+
 type chainClient struct {
 	chainConfig util.YamlContent
 	client      *ethclient.Client
+	keyStoreDir string //创建账户保存账号信息的目录
+}
+
+func (cc *chainClient) SetKeyStoreDir(keyStoreDir string) {
+	cc.keyStoreDir = keyStoreDir
+}
+
+func (cc *chainClient) KeyStoreDir() string {
+	return cc.keyStoreDir
 }
 
 //
@@ -118,6 +129,11 @@ func (cc *chainClient) CallContract(title string, name string, content string) s
 	return tx.Hash().Hex()
 }
 
+//创建钱包
+func (cc *chainClient) createNewWallet() {
+	fmt.Println("create new Wallate")
+}
+
 func (cc *chainClient) getBlockNumber() string {
 	header, err := cc.client.HeaderByNumber(context.Background(), nil)
 	if err != nil {
@@ -154,7 +170,7 @@ func creatAccount() {
 }
 
 // Launch
-//  @Description: 启动区块链连接，返回网络客户端对象
+//  @Description: client 构造器：启动区块链连接，返回网络客户端对象
 //  @param chainUrl
 //  @return *ethclient.Client
 //  @return error

@@ -82,3 +82,6 @@ fabric.properties
 
 # test report
 */*.out
+
+# ethereum key store Files.
+*/*UTC--*
