@@ -1,6 +1,7 @@
 package chainClient
 
 import (
+	"log"
 	"testing"
 )
 
@@ -19,6 +20,14 @@ func TestLoad(t *testing.T) {
 		cas := LoadChainAccount(iWantCnt, keyDir)
 		if cas.cnt != iWantCnt {
 			t.Errorf("生成Account 错误！应该是%v ，实际是 %v", iWantCnt, cas.cnt)
+		}
+
+		for _, ca := range cas.accounts {
+			address := ca.address
+			priKey := ca.priKey
+			keyFile := ca.keyFile
+			log.Printf("File : %v \nAddress is %v \n privateKey is %v\n", keyFile, address, priKey)
+			log.Printf("--------------------------------")
 		}
 	})
 }

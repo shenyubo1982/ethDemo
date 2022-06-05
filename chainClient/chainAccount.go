@@ -91,6 +91,7 @@ func loadChainAccountFromKeyFile(file string) *chainAccount {
 	instance.priKey = key.PrivateKey
 	instance.address = key.Address
 	instance.pubKey = key.PrivateKey.PublicKey
+	instance.keyFile = file
 	return instance
 }
 
