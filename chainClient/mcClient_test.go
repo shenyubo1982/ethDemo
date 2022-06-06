@@ -4,9 +4,8 @@ package chainClient
 import (
 	"ethDemo/util"
 	"fmt"
-	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/crypto"
 	"log"
-	"os"
 	"testing"
 )
 
@@ -29,8 +28,14 @@ func NewMetaChainLabTest() *MetaChainLabTest {
 	return instance
 }
 
+//
+//  Transact
+//  @Description: 单个账户转账测试
+//  @receiver ct
+//  @param t
+//
 func (ct MetaChainLabTest) Transact(t *testing.T) {
-	//TODO implement me
+	//Todo Admin Address to Test Account transact price.
 	//连接区块链
 	myChainConfig := util.NewChainTestYaml(ct.ConfigFile)
 	myChainClient := Launch(myChainConfig.YamlContent)
@@ -38,14 +43,44 @@ func (ct MetaChainLabTest) Transact(t *testing.T) {
 		t.Errorf("Can't get Client")
 	}
 
-	//get a test AAccount
+	// Admin account's priKeyHex
+	priKeyHex := myChainClient.chainConfig.AdminPrivateKeyHex
+
+	//get a test Account
 	keyDir := "../keys/mt"
 	iWantCnt := 1
 	cas := LoadChainAccount(iWantCnt, keyDir)
-	priKeyHex := myChainClient.chainConfig.AdminPrivateKeyHex
+	// to Account's Address
 	toAddressHex := cas.accounts[0].address.Hex()
+	transBeforeToAddress := myChainClient.getBalanceByAddress(toAddressHex)
+
+	// transact From Account Balance
+	acc1Key, _ := crypto.HexToECDSA(priKeyHex)
+	fromAddressHex := crypto.PubkeyToAddress(acc1Key.PublicKey).Hex()
+	transBeforeFromAddress := myChainClient.getBalanceByAddress(fromAddressHex)
+
+	//转账金额
 	price := int64(1000000000000000000) // in wei (1 eth)
 	myChainClient.transferExchange(priKeyHex, toAddressHex, price)
+
+	//transact From Account Balance
+	transAfterFromAddress := myChainClient.getBalanceByAddress(fromAddressHex)
+	//transact To Account Balance
+	transAfterToAddress := myChainClient.getBalanceByAddress(toAddressHex)
+
+	//检查Transact From 账号的val
+	if 1 != transBeforeFromAddress.Cmp(transAfterFromAddress) {
+		t.Errorf("转账%v没有成功.\nbefore Val:%v \nafter val:%v", fromAddressHex, transBeforeFromAddress, transAfterFromAddress)
+	} else {
+		log.Printf("转账%v成功\n转账前:%v \n转账之后:%v", fromAddressHex, transBeforeFromAddress, transAfterFromAddress)
+	}
+	//检查Transact To 账号的val
+	if 1 != transAfterToAddress.Cmp(transBeforeToAddress) {
+		t.Errorf("转账%v没有成功.\nbefore Val:%v \nafter val:%v", toAddressHex, transBeforeToAddress, transAfterToAddress)
+	} else {
+		log.Printf("转账%v成功\n转账前:%v\n转账之后:%v\n", toAddressHex, transBeforeToAddress, transAfterToAddress)
+	}
+
 }
 
 //
@@ -143,25 +178,25 @@ func (ct MetaChainLabTest) IsConnected(t *testing.T) bool {
 	return true
 }
 
-func (ct MetaChainLabTest) mySelfTestFunc(t *testing.T) {
-	infuraKovanUrl := "https://kovan.infura.io/v3/3f97ae7214cc4e2794bee5bdc3bd6b95"
-	client, err := ethclient.Dial(infuraKovanUrl)
-	if err != nil {
-		log.Fatalf("Oops! There was a problem %v", err)
-		os.Exit(100)
-	} else {
-		fmt.Println("Success! you are connected to the Ethereum Network")
-	}
-	kovanTestEthAddress := "0x1D9b2905b2EC7d9F64022c6e698c0d622A35225c"
-	KovanTestEthValue := GetBalanceFromAddress(*client, kovanTestEthAddress)
-	fmt.Printf("myAddress is %v,it's Eth Value in Kovan Testnet is %v\n", kovanTestEthAddress, KovanTestEthValue)
-
-	// 根据账户地址和区块高度查询，区块交易的金额。 这个功能需要https://infura.io/dashboard 中购买 archive Data 功能才能调用api
-	//KovanTestEthBlockNums := []int64{31866217, 31866202}
-	//KovanTestEthValueAtBlock := getBalanceFromBlockNum(*chainClient, kovanTestEthAddress, KovanTestEthBlockNums[0])
-	//fmt.Printf("myAddress is %v,it's in %v BlockNumber ,and Kovan Testnet is %v\n", kovanTestEthAddress, KovanTestEthBlockNums[0], KovanTestEthValueAtBlock)
-
-}
+//func (ct MetaChainLabTest) mySelfTestFunc(t *testing.T) {
+//	infuraKovanUrl := "https://kovan.infura.io/v3/3f97ae7214cc4e2794bee5bdc3bd6b95"
+//	client, err := ethclient.Dial(infuraKovanUrl)
+//	if err != nil {
+//		log.Fatalf("Oops! There was a problem %v", err)
+//		os.Exit(100)
+//	} else {
+//		fmt.Println("Success! you are connected to the Ethereum Network")
+//	}
+//	kovanTestEthAddress := "0x1D9b2905b2EC7d9F64022c6e698c0d622A35225c"
+//	KovanTestEthValue := client.getBalanceByAddress(toAddressHex)
+//	fmt.Printf("myAddress is %v,it's Eth Value in Kovan Testnet is %v\n", kovanTestEthAddress, KovanTestEthValue)
+//
+//	// 根据账户地址和区块高度查询，区块交易的金额。 这个功能需要https://infura.io/dashboard 中购买 archive Data 功能才能调用api
+//	//KovanTestEthBlockNums := []int64{31866217, 31866202}
+//	//KovanTestEthValueAtBlock := getBalanceFromBlockNum(*chainClient, kovanTestEthAddress, KovanTestEthBlockNums[0])
+//	//fmt.Printf("myAddress is %v,it's in %v BlockNumber ,and Kovan Testnet is %v\n", kovanTestEthAddress, KovanTestEthBlockNums[0], KovanTestEthValueAtBlock)
+//
+//}
 
 //
 //  TestLaunch

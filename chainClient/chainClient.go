@@ -42,19 +42,29 @@ func convertWeiToValue(balance *big.Int) (ethValue *big.Float) {
 	fbalance := new(big.Float)
 	fbalance.SetString(balance.String())
 	ethValue = new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(18)))
-	log.Printf("Value is : %v", ethValue)
+	//log.Printf("Value is : %v", ethValue)
 	return ethValue
 }
 
-func GetBalanceFromAddress(client ethclient.Client, address string) *big.Float {
-	account := common.HexToAddress(address)
-	balance, err := client.BalanceAt(context.Background(), account, nil)
+func (cc *chainClient) getBalanceByAddress(addressHex string) *big.Float {
+	account := common.HexToAddress(addressHex)
+	balance, err := cc.client.BalanceAt(context.Background(), account, nil)
 	if err != nil {
 		panic(err)
 	}
-	log.Printf("balance is : %v", balance)
+	//log.Printf("balance is : %v", balance)
 	return convertWeiToValue(balance)
 }
+
+//func GetBalanceFromAddress(client ethclient.Client, address string) *big.Float {
+//	account := common.HexToAddress(address)
+//	balance, err := client.BalanceAt(context.Background(), account, nil)
+//	if err != nil {
+//		panic(err)
+//	}
+//	log.Printf("balance is : %v", balance)
+//	return convertWeiToValue(balance)
+//}
 
 func GetBalanceFromBlockNum(client ethclient.Client, address string, blockNum int64) *big.Float {
 	account := common.HexToAddress(address)
@@ -138,7 +148,7 @@ func (cc *chainClient) getBlockNumber() string {
 }
 
 //
-//  transferExchange Todo
+//  transferExchange
 //  @Description: 发起交易(转账)
 //  @receiver cc 链客户端
 //  @param fromAccount 发起交易方
