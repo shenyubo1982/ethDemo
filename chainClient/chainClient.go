@@ -14,6 +14,7 @@ import (
 	"log"
 	"math"
 	"math/big"
+	"reflect"
 )
 
 const PathSymbol = "/"
@@ -46,6 +47,13 @@ func convertWeiToValue(balance *big.Int) (ethValue *big.Float) {
 	return ethValue
 }
 
+//
+//  getBalanceByAddress
+//  @Description: 获取地址上目前的最新balance
+//  @receiver cc
+//  @param addressHex
+//  @return *big.Float
+//
 func (cc *chainClient) getBalanceByAddress(addressHex string) *big.Float {
 	account := common.HexToAddress(addressHex)
 	balance, err := cc.client.BalanceAt(context.Background(), account, nil)
@@ -55,16 +63,6 @@ func (cc *chainClient) getBalanceByAddress(addressHex string) *big.Float {
 	//log.Printf("balance is : %v", balance)
 	return convertWeiToValue(balance)
 }
-
-//func GetBalanceFromAddress(client ethclient.Client, address string) *big.Float {
-//	account := common.HexToAddress(address)
-//	balance, err := client.BalanceAt(context.Background(), account, nil)
-//	if err != nil {
-//		panic(err)
-//	}
-//	log.Printf("balance is : %v", balance)
-//	return convertWeiToValue(balance)
-//}
 
 func GetBalanceFromBlockNum(client ethclient.Client, address string, blockNum int64) *big.Float {
 	account := common.HexToAddress(address)
@@ -130,6 +128,22 @@ func (cc *chainClient) CallContract(title string, name string, content string) s
 		Context:  auth.Context,
 		NoSend:   false,
 	}
+
+	// todo reflect methods
+	typeOfContract := reflect.TypeOf(instance)
+	for i := 0; i < typeOfContract.NumMethod(); i++ {
+		fmt.Printf(
+			"method is %s, type is %s, kind is %s.\n",
+			typeOfContract.Method(i).Name,
+			typeOfContract.Method(i).Type,
+			typeOfContract.Method(i).Type.Kind(),
+		)
+	}
+	method, _ := typeOfContract.MethodByName("AddInfo")
+	fmt.Printf("method is %s, type is %s, kind is %s.\n", method.Name, method.Type, method.Type.Kind())
+
+	// todo reflect methods
+
 	tx, err := instance.AddInfo(transactOpts, title, name, content)
 	if err != nil {
 		log.Fatal(err)
