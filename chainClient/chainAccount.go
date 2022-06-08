@@ -21,6 +21,18 @@ type chainAccount struct {
 	keyFile string
 }
 
+func (c chainAccount) Address() common.Address {
+	return c.address
+}
+
+func (c chainAccount) KeyDir() string {
+	return c.keyDir
+}
+
+func (c chainAccount) KeyFile() string {
+	return c.keyFile
+}
+
 func (c chainAccount) AddressHex() string {
 	return c.address.Hex()
 }
@@ -54,6 +66,14 @@ func (c chainAccount) PubKeyHex() string {
 type chainAccounts struct {
 	accounts []chainAccount
 	cnt      int
+}
+
+func (c chainAccounts) Accounts() []chainAccount {
+	return c.accounts
+}
+
+func (c chainAccounts) Account(index int) chainAccount {
+	return c.accounts[index]
 }
 
 // Cnt

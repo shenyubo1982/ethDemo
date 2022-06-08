@@ -1,7 +1,8 @@
-package chainClient
+package business
 
 //  meta链测试脚本
 import (
+	"ethDemo/chainClient"
 	"ethDemo/util"
 	"testing"
 )
@@ -23,7 +24,7 @@ func NewEthKovanTest() *EthKovanTest {
 
 func (k EthKovanTest) IsConnected(t *testing.T) bool {
 	myChainConfig := util.NewChainTestYaml(k.ConfigFile)
-	myChainClient := Launch(myChainConfig.YamlContent)
+	myChainClient := chainClient.Launch(myChainConfig.YamlContent)
 	if myChainClient == nil {
 		t.Errorf("Can't get Client")
 		return false

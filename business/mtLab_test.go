@@ -1,11 +1,13 @@
-package chainClient
+package business
 
-// chain 链测试 package
+// 业务测试 mt（链名称） Lab（业务名称）_test(测试用例)
 import (
+	"ethDemo/chainClient"
 	"ethDemo/util"
 	"fmt"
 	"github.com/ethereum/go-ethereum/crypto"
 	"log"
+	"math/big"
 	"testing"
 )
 
@@ -30,7 +32,7 @@ func NewMetaChainLabTest() *MetaChainLabTest {
 
 //
 //  Transact
-//  @Description: 单个账户转账测试
+//  @Description: 单个账户转账测试 (case 不正确，需要调整，from地址的val变化没有区别，实际上是变化了)
 //  @receiver ct
 //  @param t
 //
@@ -38,38 +40,41 @@ func (ct MetaChainLabTest) Transact(t *testing.T) {
 	//Todo Admin Address to Test Account transact price.
 	//连接区块链
 	myChainConfig := util.NewChainTestYaml(ct.ConfigFile)
-	myChainClient := Launch(myChainConfig.YamlContent)
+	myChainClient := chainClient.Launch(myChainConfig.YamlContent)
 	if myChainClient == nil {
 		t.Errorf("Can't get Client")
 	}
 
 	// Admin account's priKeyHex
-	priKeyHex := myChainClient.chainConfig.AdminPrivateKeyHex
+	priKeyHex := myChainClient.ChainConfig().AdminPrivateKeyHex
 
 	//get a test Account
 	keyDir := "../keys/mt"
 	iWantCnt := 1
-	cas := LoadChainAccount(iWantCnt, keyDir)
+	cas := chainClient.LoadChainAccount(iWantCnt, keyDir)
 	// to Account's Address
-	toAddressHex := cas.accounts[0].address.Hex()
-	transBeforeToAddress := myChainClient.getBalanceByAddress(toAddressHex)
+	toAddressHex := cas.Account(0).Address().Hex()
+	transBeforeToAddress := myChainClient.GetBalanceByAddress(toAddressHex)
 
 	// transact From Account Balance
 	acc1Key, _ := crypto.HexToECDSA(priKeyHex)
 	fromAddressHex := crypto.PubkeyToAddress(acc1Key.PublicKey).Hex()
-	transBeforeFromAddress := myChainClient.getBalanceByAddress(fromAddressHex)
+	transBeforeFromAddress := myChainClient.GetBalanceByAddress(fromAddressHex)
 
 	//转账金额
 	price := int64(1000000000000000000) // in wei (1 eth)
-	myChainClient.transferExchange(priKeyHex, toAddressHex, price)
+	myChainClient.TransferExchange(priKeyHex, toAddressHex, price)
 
 	//transact From Account Balance
-	transAfterFromAddress := myChainClient.getBalanceByAddress(fromAddressHex)
+	transAfterFromAddress := myChainClient.GetBalanceByAddress(fromAddressHex)
 	//transact To Account Balance
-	transAfterToAddress := myChainClient.getBalanceByAddress(toAddressHex)
+	transAfterToAddress := myChainClient.GetBalanceByAddress(toAddressHex)
+
+	// Todo:Bug 验证的方法需要修改。获取From和To转账地址在转账前的金额。发起转账交易后，根据交易id，确认区块链已成功后，再确认From和To转账地址最新的金额。进行比较。
 
 	//检查Transact From 账号的val
-	if 1 != transBeforeFromAddress.Cmp(transAfterFromAddress) {
+	//1：前面的big.Int 实例大于cmp方法big.Int 参数
+	if -1 != transAfterFromAddress.Cmp(transBeforeFromAddress) {
 		t.Errorf("转账%v没有成功.\nbefore Val:%v \nafter val:%v", fromAddressHex, transBeforeFromAddress, transAfterFromAddress)
 	} else {
 		log.Printf("转账%v成功\n转账前:%v \n转账之后:%v", fromAddressHex, transBeforeFromAddress, transAfterFromAddress)
@@ -93,9 +98,9 @@ func (ct MetaChainLabTest) Transact(t *testing.T) {
 func (ct MetaChainLabTest) CreateAccount(newCount int, t *testing.T) {
 	keyDir := "../keys/mt"
 	iWantCnt := newCount
-	cas := LoadChainAccount(iWantCnt, keyDir)
-	if cas.cnt != iWantCnt {
-		t.Errorf("生成Account 错误！应该是%v ，实际是 %v", iWantCnt, cas.cnt)
+	cas := chainClient.LoadChainAccount(iWantCnt, keyDir)
+	if cas.Cnt() != iWantCnt {
+		t.Errorf("生成Account 错误！应该是%v ，实际是 %v", iWantCnt, cas.Cnt())
 	}
 }
 
@@ -113,22 +118,34 @@ func (ct MetaChainLabTest) PressureAttack(t *testing.T) {
 func (ct MetaChainLabTest) CheckChainNum(t *testing.T) {
 	//连接区块链
 	myChainConfig := util.NewChainTestYaml(ct.ConfigFile)
-	myChainClient := Launch(myChainConfig.YamlContent)
+	myChainClient := chainClient.Launch(myChainConfig.YamlContent)
 	if myChainClient == nil {
 		t.Errorf("Can't get Client")
 	}
-	// 获取区块链上的最新区块高度
-	nowBlockNum := myChainClient.getBlockNumber()
+
+	var getInfoJson = util.GetInfoJson{}
+	webBlockNum := new(big.Int)
+
 	responseBody, _, _ := util.WebGetRequest(ct.blockInfoRequestUrl)
 	if responseBody == nil {
-		t.Errorf("blockNum in chain is %v\nblockNum in web si %v ", nowBlockNum, nil)
+		t.Errorf("blockNum in web is %v ", nil)
 	}
 	//调用接口浏览器使用的接口，获取最新区块高度信息
-	var getInfoJson = util.GetInfoJson{}
-	webBlockNum := util.ConvertBody2Json(responseBody, getInfoJson, "BlockNumber")
+	webBN := util.ConvertBody2Json(responseBody, getInfoJson, "BlockNumber")
+
+	webBlockNum, ok := webBlockNum.SetString(webBN, 10)
+	if !ok {
+		panic("big int setString is error.")
+	}
+	//blocknum := util.ConvertBody2Json(responseBody, getInfoJson, "BlockNumber")
+	//webBlockNum := big.NewInt()
+
+	// 获取区块链上的最新区块高度
+	nowBlockNum := myChainClient.GetBlockNumber()
+
 	//比较区块高度时是否一致
-	if nowBlockNum != webBlockNum {
-		t.Errorf("blockNum in chain is %v\nblockNum in web si %v ", nowBlockNum, webBlockNum)
+	if 0 != nowBlockNum.Cmp(webBlockNum) {
+		t.Errorf("blockNum in chain is %v\nblockNum in web is %v ", nowBlockNum, webBlockNum)
 	}
 }
 
@@ -141,7 +158,7 @@ func (ct MetaChainLabTest) CheckChainNum(t *testing.T) {
 func (ct MetaChainLabTest) CallContract(t *testing.T) {
 	//连接区块链
 	myChainConfig := util.NewChainTestYaml(ct.ConfigFile)
-	myChainClient := Launch(myChainConfig.YamlContent)
+	myChainClient := chainClient.Launch(myChainConfig.YamlContent)
 	if myChainClient == nil {
 		t.Errorf("Can't get Client")
 	}
@@ -170,7 +187,7 @@ func (ct MetaChainLabTest) CallContract(t *testing.T) {
 func (ct MetaChainLabTest) IsConnected(t *testing.T) bool {
 	//连接区块链
 	myChainConfig := util.NewChainTestYaml(ct.ConfigFile)
-	myChainClient := Launch(myChainConfig.YamlContent)
+	myChainClient := chainClient.Launch(myChainConfig.YamlContent)
 	if myChainClient == nil {
 		t.Errorf("Can't get Client")
 		return false
@@ -198,7 +215,21 @@ func (ct MetaChainLabTest) IsConnected(t *testing.T) bool {
 //
 //}
 
+//Test开始的是测试用例，用go test 工具会执行的测试用例。
+//  TestChainNumMetaLab 链上最新区块高度,
+//  @Description: 确认目前区块高度（目前有bug需要在第一个testcase执行才能成功，否则区块高度与浏览器获取的高度不一致)
+//  @param t
 //
+func TestChainNumMetaLab(t *testing.T) {
+	t.Run("TestChainNumMetaLab", func(t *testing.T) {
+		t.Helper()
+		var metaChainOptionTest ChainTestingCase
+		metaChainOptionTest = NewMetaChainLabTest()
+		metaChainOptionTest.CheckChainNum(t)
+	})
+}
+
+// business test
 //  TestLaunch
 //  @Description: 区块链网络连接测试用例逻辑
 //  @param t
@@ -215,20 +246,7 @@ func TestLaunchMetaLab(t *testing.T) {
 	})
 }
 
-//Test开始的是测试用例，用go test 工具会执行的测试用例。
-//  TestChainNumMetaLab 链上最新区块高度,
-//  @Description:
-//  @param t
-//
-func TestChainNumMetaLab(t *testing.T) {
-	t.Run("TestChainNumMetaLab", func(t *testing.T) {
-		t.Helper()
-		var metaChainOptionTest ChainTestingCase
-		metaChainOptionTest = NewMetaChainLabTest()
-		metaChainOptionTest.CheckChainNum(t)
-	})
-}
-
+// business test
 func TestCreateAccount(t *testing.T) {
 	t.Run("TestCreateAccount", func(t *testing.T) {
 		t.Helper()
@@ -238,6 +256,7 @@ func TestCreateAccount(t *testing.T) {
 	})
 }
 
+// business test
 //Test开始的是测试用例，用go test 工具会执行的测试用例。
 //  TestCallContractMetaLab 调用智能合约方法
 //  @Description:
@@ -252,6 +271,7 @@ func TestCallContractMetaLab(t *testing.T) {
 	})
 }
 
+// business test
 //Test开始的是测试用例，用go test 工具会执行的测试用例。
 //  TestTransactExchange 转账
 //  @Description:
@@ -263,5 +283,31 @@ func TestTransactExchange(t *testing.T) {
 		var metaChainOptionTest ChainTestingCase
 		metaChainOptionTest = NewMetaChainLabTest()
 		metaChainOptionTest.Transact(t)
+	})
+}
+
+func TestGetBalanceFromBlockNum(t *testing.T) {
+	t.Run("TestGetBlockInfo", func(t *testing.T) {
+		t.Helper()
+		var metaChainOptionTest ChainTestingCase
+		metaChainOptionTest = NewMetaChainLabTest()
+		metaChainOptionTest.CheckChainNum(t)
+
+	})
+}
+
+//func unit test
+func TestGetBlockInfo(t *testing.T) {
+	t.Run("TestGetBlockInfo", func(t *testing.T) {
+		t.Helper()
+		metaChainOptionTest := NewMetaChainLabTest()
+		//连接区块链
+		myChainConfig := util.NewChainTestYaml(metaChainOptionTest.ConfigFile)
+		myChainClient := chainClient.Launch(myChainConfig.YamlContent)
+		if myChainClient == nil {
+			t.Errorf("Can't get Client")
+		}
+		myChainClient.GetBlockInfo(myChainClient.GetBlockNumber())
+
 	})
 }

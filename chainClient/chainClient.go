@@ -25,6 +25,10 @@ type chainClient struct {
 	keyStoreDir string //创建账户保存账号信息的目录
 }
 
+func (cc *chainClient) ChainConfig() util.YamlContent {
+	return cc.chainConfig
+}
+
 func (cc *chainClient) SetKeyStoreDir(keyStoreDir string) {
 	cc.keyStoreDir = keyStoreDir
 }
@@ -47,14 +51,13 @@ func convertWeiToValue(balance *big.Int) (ethValue *big.Float) {
 	return ethValue
 }
 
-//
-//  getBalanceByAddress
+// GetBalanceByAddress
 //  @Description: 获取地址上目前的最新balance
 //  @receiver cc
 //  @param addressHex
 //  @return *big.Float
 //
-func (cc *chainClient) getBalanceByAddress(addressHex string) *big.Float {
+func (cc *chainClient) GetBalanceByAddress(addressHex string) *big.Float {
 	account := common.HexToAddress(addressHex)
 	balance, err := cc.client.BalanceAt(context.Background(), account, nil)
 	if err != nil {
@@ -64,6 +67,13 @@ func (cc *chainClient) getBalanceByAddress(addressHex string) *big.Float {
 	return convertWeiToValue(balance)
 }
 
+// GetBalanceFromBlockNum
+//  @Description:
+//  @param client
+//  @param address
+//  @param blockNum
+//  @return *big.Float
+//
 func GetBalanceFromBlockNum(client ethclient.Client, address string, blockNum int64) *big.Float {
 	account := common.HexToAddress(address)
 	blockNumber := big.NewInt(blockNum)
@@ -152,24 +162,40 @@ func (cc *chainClient) CallContract(title string, name string, content string) s
 	return tx.Hash().Hex()
 }
 
-func (cc *chainClient) getBlockNumber() string {
+// GetBlockNumber
+//  @Description: 获取区块头
+//  @receiver cc: 区块链客户端
+//  @return string 区块头编号
+//
+func (cc *chainClient) GetBlockNumber() *big.Int {
 	header, err := cc.client.HeaderByNumber(context.Background(), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(header.Number.String()) // 5671744
-	return header.Number.String()
+	return header.Number
 }
 
-//
-//  transferExchange
+func (cc chainClient) GetBlockInfo(blockNumber *big.Int) {
+	block, err := cc.client.BlockByNumber(context.Background(), blockNumber)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(block.Number().Uint64())     // 5671744
+	fmt.Println(block.Time())                // 1527211625
+	fmt.Println(block.Difficulty().Uint64()) // 3217000136609065
+	fmt.Println(block.Hash().Hex())          // 0x9e8751ebb5069389b855bba72d94902cc385042661498a415979b7b6ee9ba4b9
+	fmt.Println(len(block.Transactions()))   // 144
+}
+
+// TransferExchange
 //  @Description: 发起交易(转账)
 //  @receiver cc 链客户端
 //  @param fromAccount 发起交易方
 //  @param toAddress 交易目的
 //  @param price
 //
-func (cc *chainClient) transferExchange(priKeyHex string, toAddressHex string, price int64) {
+func (cc *chainClient) TransferExchange(priKeyHex string, toAddressHex string, price int64) {
 
 	privateKey, err := crypto.HexToECDSA(priKeyHex)
 	if err != nil {
@@ -216,6 +242,14 @@ func (cc *chainClient) transferExchange(priKeyHex string, toAddressHex string, p
 	}
 
 	fmt.Printf("tx sent: %s", signedTx.Hash().Hex())
+}
+
+//TODO
+//查询交易
+func (cc chainClient) GetTx(tx_hash string) {
+	// 交易查询
+	print("Todo")
+
 }
 
 // Launch
