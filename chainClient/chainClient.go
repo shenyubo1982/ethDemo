@@ -3,6 +3,7 @@ package chainClient
 import (
 	"context"
 	"crypto/ecdsa"
+	"errors"
 	evidencecontract "ethDemo/abi"
 	"ethDemo/util"
 	"fmt"
@@ -22,20 +23,24 @@ const PathSymbol = "/"
 type chainClient struct {
 	chainConfig util.YamlContent
 	client      *ethclient.Client
-	keyStoreDir string //创建账户保存账号信息的目录
+	//keyStoreDir string //创建账户保存账号信息的目录
+}
+
+func (cc *chainClient) Client() *ethclient.Client {
+	return cc.client
 }
 
 func (cc *chainClient) ChainConfig() util.YamlContent {
 	return cc.chainConfig
 }
 
-func (cc *chainClient) SetKeyStoreDir(keyStoreDir string) {
-	cc.keyStoreDir = keyStoreDir
-}
-
-func (cc *chainClient) KeyStoreDir() string {
-	return cc.keyStoreDir
-}
+//func (cc *chainClient) SetKeyStoreDir(keyStoreDir string) {
+//	cc.keyStoreDir = keyStoreDir
+//}
+//
+//func (cc *chainClient) KeyStoreDir() string {
+//	return cc.keyStoreDir
+//}
 
 //
 //  convertWeiToValue
@@ -44,9 +49,9 @@ func (cc *chainClient) KeyStoreDir() string {
 //  @return ethValue
 //
 func convertWeiToValue(balance *big.Int) (ethValue *big.Float) {
-	fbalance := new(big.Float)
-	fbalance.SetString(balance.String())
-	ethValue = new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(18)))
+	fBalance := new(big.Float)
+	fBalance.SetString(balance.String())
+	ethValue = new(big.Float).Quo(fBalance, big.NewFloat(math.Pow10(18)))
 	//log.Printf("Value is : %v", ethValue)
 	return ethValue
 }
@@ -195,23 +200,24 @@ func (cc chainClient) GetBlockInfo(blockNumber *big.Int) {
 //  @param toAddress 交易目的
 //  @param price
 //
-func (cc *chainClient) TransferExchange(priKeyHex string, toAddressHex string, price int64) {
-
+func (cc *chainClient) TransferExchange(priKeyHex string, toAddressHex string, price int64) (txHex common.Hash, err error) {
+	txHex = common.Hash{}
 	privateKey, err := crypto.HexToECDSA(priKeyHex)
 	if err != nil {
-		log.Fatal(err)
+		return txHex, err
 	}
 
 	publicKey := privateKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
 	if !ok {
-		log.Fatal("cannot assert type: publicKey is not of type *ecdsa.PublicKey")
+		return txHex, errors.New("cannot assert type: publicKey is not of type *ecdsa.PublicKey")
 	}
 
 	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
 	nonce, err := cc.client.PendingNonceAt(context.Background(), fromAddress)
 	if err != nil {
-		log.Fatal(err)
+		return txHex, err
+		//log.Fatal(err)
 	}
 
 	//value := big.NewInt(1000000000000000000) // in wei (1 eth)
@@ -219,7 +225,8 @@ func (cc *chainClient) TransferExchange(priKeyHex string, toAddressHex string, p
 	gasLimit := uint64(21000)  // in units
 	gasPrice, err := cc.client.SuggestGasPrice(context.Background())
 	if err != nil {
-		log.Fatal(err)
+		//log.Fatal(err)
+		return txHex, err
 	}
 
 	toAddress := common.HexToAddress(toAddressHex)
@@ -228,20 +235,25 @@ func (cc *chainClient) TransferExchange(priKeyHex string, toAddressHex string, p
 
 	chainID, err := cc.client.NetworkID(context.Background())
 	if err != nil {
-		log.Fatal(err)
+		return txHex, err
+		//log.Fatal(err)
 	}
 
 	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privateKey)
 	if err != nil {
-		log.Fatal(err)
+		return txHex, err
+		//log.Fatal(err)
 	}
 
 	err = cc.client.SendTransaction(context.Background(), signedTx)
 	if err != nil {
-		log.Fatal(err)
+		return txHex, err
+		//log.Fatal(err)
 	}
 
-	fmt.Printf("tx sent: %s", signedTx.Hash().Hex())
+	//返回交易的hex
+	txHex = signedTx.Hash()
+	return txHex, err
 }
 
 //TODO

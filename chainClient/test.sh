@@ -8,5 +8,7 @@
 # 版本内容：
 
 
-go test -v -covermode=set -coverprofile=hint_test.out ./ >>hint_test.out
-
+# go test -v -covermode=set -coverprofile=hint_test.out ./ >>hint_test.out
+go test -v -covermode=set -coverprofile=hint_test.out ./
+go test -coverprofile=coverage.out ./
+go tool cover -html=coverage.out

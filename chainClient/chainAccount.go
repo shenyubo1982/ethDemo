@@ -2,6 +2,7 @@ package chainClient
 
 import (
 	"crypto/ecdsa"
+	"errors"
 	"ethDemo/util"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
@@ -14,11 +15,11 @@ import (
 const accountPwd = "secret_mt"
 
 type chainAccount struct {
-	priKey  *ecdsa.PrivateKey
-	address common.Address
-	pubKey  *ecdsa.PublicKey
-	keyDir  string
-	keyFile string
+	priKey  *ecdsa.PrivateKey //账户私钥对象
+	address common.Address    //账户地址
+	pubKey  *ecdsa.PublicKey  //公钥
+	keyDir  string            //storeKey 目录
+	keyFile string            //storeKey 文件
 }
 
 func (c chainAccount) Address() common.Address {
@@ -42,7 +43,7 @@ func (c chainAccount) PriKey() *ecdsa.PrivateKey {
 }
 
 // PriKeyHex
-//  @Description: 获取账户私钥hash
+//  @Description: 获取账户私钥Hex
 //  @receiver c
 //  @return string
 //
@@ -63,6 +64,7 @@ func (c chainAccount) PubKeyHex() string {
 	return hexutil.Encode(crypto.FromECDSAPub(c.pubKey))
 }
 
+// 账号集对象
 type chainAccounts struct {
 	accounts []chainAccount
 	cnt      int
@@ -94,13 +96,14 @@ func (c *chainAccounts) AddAccount(keyDir string, keyFile string) {
 	if c.accounts == nil {
 		c.accounts = make([]chainAccount, 0, 1)
 	}
-	c.accounts = append(c.accounts, *loadChainAccountFromKeyFile(keyDir, keyFile))
+	account, _ := loadChainAccountFromKeyFile(keyDir, keyFile)
+	c.accounts = append(c.accounts, *account)
 	c.cnt += 1
 }
 
 // LoadChainAccount
-//  @Description:  构造器，根据要生成多少个测试账号来生成多个account
-//  @param loadCnt 希望生成的account数目
+//  @Description:  构造器，加载制定数量的测试账号。不足的自动生成。
+//  @param loadCnt 希望加载的测试账号数目
 //  @param keyFileDirectory 过往实验用过的账号，通过keyFile加载 ../keys/mt/
 //  @return *chainAccounts
 //
@@ -117,7 +120,10 @@ func LoadChainAccount(loadCnt int, keyFileDirectory string) *chainAccounts {
 	}
 	//填补不足的账号
 	for i := 0; i < loadCnt-existedKeyCnt; i++ {
-		createAccountWithKs(keyFileDirectory)
+		_, err := createAccountWithKs(keyFileDirectory)
+		if err != nil {
+			log.Printf("LoadChainAccount Running Error: %v \n", err)
+		}
 	}
 	//重新获取加载的文件列表
 	keyFiles = util.GetFilesInDir(keyFileDirectory)
@@ -139,33 +145,28 @@ func LoadChainAccount(loadCnt int, keyFileDirectory string) *chainAccounts {
 //  @param keyFile: keyStore name
 //  @return *chainAccount account
 //
-func loadChainAccountFromKeyFile(keyDir string, keyFile string) *chainAccount {
+func loadChainAccountFromKeyFile(keyDir string, keyFile string) (*chainAccount, error) {
 	instance := new(chainAccount)
-	//预存测试过程中需要使用的配置
-	//instance.ConfigFile = "metaTest.yaml"
-	//instance.blockInfoRequestUrl = "http://testing-metain-js-official-node-service.jiansutech.com/api/mt/getInfo"
-	// 配置保存 key store 的目录
-	//file := "../key/mt/UTC--2018-07-04T09-58-30.122808598Z--20f8d42fb0f667f2e53930fed426f225752453b3"
 	// check file is existed and actually a file.
 	storeFile := keyDir + PathSymbol + keyFile
 	if !util.Exists(storeFile) || util.IsDir(storeFile) {
-		panic("block chain Account Load Fail. Key File is not correct.")
+		return nil, errors.New("block chain Account Load Fail. Key File is not correct")
 	}
 	//ks := keystore.NewKeyStore(cc.keyStoreDir, keystore.StandardScryptN, keystore.StandardScryptP)
 	jsonBytes, err := ioutil.ReadFile(storeFile)
 	if err != nil {
-		panic("block chain Account Load Key File is Failed.")
+		return nil, err
 	}
 	key, err := keystore.DecryptKey(jsonBytes, accountPwd)
 	if err != nil {
-		panic("block chain Account Decrypt Kye Failed.")
+		return nil, err
 	}
 	instance.priKey = key.PrivateKey
 	instance.address = key.Address
 	instance.pubKey = &key.PrivateKey.PublicKey
 	instance.keyDir = keyDir
 	instance.keyFile = keyFile
-	return instance
+	return instance, nil
 }
 
 //
@@ -173,19 +174,20 @@ func loadChainAccountFromKeyFile(keyDir string, keyFile string) *chainAccount {
 //  @Description: 用keyStore的方式创建账号
 //  @param keyDir KeyStore保存的目录路径 ./dirName
 //
-func createAccountWithKs(keyDir string) {
+func createAccountWithKs(keyDir string) (bool, error) {
 	//check
 	if keyDir == "" {
-		log.Fatal("No store Dir.Please set it first.")
+		return false, errors.New("no store Dir.Please set it first")
 	}
 	if !util.IsDir(keyDir) {
-		log.Fatal("it's Not Dir.")
+		return false, errors.New("it's Not Dir")
 	}
 	ks := keystore.NewKeyStore(keyDir, keystore.StandardScryptN, keystore.StandardScryptP)
 	_, err := ks.NewAccount(accountPwd)
 	if err != nil {
-		log.Fatal(err)
+		return false, err
 	}
+	return true, nil
 }
 
 // GetPrivateKey
@@ -194,21 +196,20 @@ func createAccountWithKs(keyDir string) {
 //  @param password : store file 密码
 //  @return *ecdsa.PrivateKey  私钥
 //
-func GetPrivateKey(storeFile string, password string) *ecdsa.PrivateKey {
+func GetPrivateKey(storeFile string, password string) (*ecdsa.PrivateKey, error) {
 	// check file is existed and actually a file.
 	if !util.Exists(storeFile) || util.IsDir(storeFile) {
-		panic("block chain Account Load Fail. Key File is not correct.")
+		return nil, errors.New("block chain Account Load Fail. directory or file name is not correct")
 	}
-	//ks := keystore.NewKeyStore(cc.keyStoreDir, keystore.StandardScryptN, keystore.StandardScryptP)
 	jsonBytes, err := ioutil.ReadFile(storeFile)
 	if err != nil {
-		panic("block chain Account Load Key File is Failed.")
+		return nil, err
 	}
-	key, err := keystore.DecryptKey(jsonBytes, accountPwd)
-	if err != nil {
-		panic("block chain Account Decrypt Kye Failed.")
+	key, errDecrypt := keystore.DecryptKey(jsonBytes, password)
+	if errDecrypt != nil {
+		return nil, errDecrypt
 	}
-	return key.PrivateKey
+	return key.PrivateKey, nil
 }
 
 // GetPrivateKeyHex
@@ -217,7 +218,10 @@ func GetPrivateKey(storeFile string, password string) *ecdsa.PrivateKey {
 //  @param password : store file 密码
 //  @return string : 私钥hex 可以直接用于导入
 //
-func GetPrivateKeyHex(storeFile string, password string) string {
-	priKey := GetPrivateKey(storeFile, password)
-	return common.BigToHash(priKey.D).Hex()
+func GetPrivateKeyHex(storeFile string, password string) (string, error) {
+	priKey, err := GetPrivateKey(storeFile, password)
+	if err != nil {
+		return "", err
+	}
+	return common.BigToHash(priKey.D).Hex(), nil
 }

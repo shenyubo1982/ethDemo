@@ -1,6 +1,14 @@
 package chainClient
 
-import "math/big"
+import (
+	"context"
+	"fmt"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
+	"log"
+	"math/big"
+	"reflect"
+)
 
 type ChainBlock struct {
 	blockNum          big.Int //区块高度
@@ -11,14 +19,14 @@ type ChainBlock struct {
 	chainTransaction  []chainTransaction
 }
 
-// NewChainBlock 构造器
+// NewChainBlock 构造器(根据区块高度）
 func NewChainBlock(blockNum big.Int) *ChainBlock {
 	chainBlockInstance := new(ChainBlock)
-
 	chainBlockInstance.blockNum = blockNum
-
 	return chainBlockInstance
 }
+
+//todo 查询区块信息
 
 func (c *ChainBlock) ChainTransaction() []chainTransaction {
 	return c.chainTransaction
@@ -66,4 +74,21 @@ func (c *ChainBlock) BlockTransactions() int {
 
 func (c *ChainBlock) setBlockTransactions(blockTransactions int) {
 	c.blockTransactions = blockTransactions
+}
+
+func getReceiptStatus(client *ethclient.Client, txHex common.Hash, TypeName string) {
+	receipt, err := client.TransactionReceipt(context.Background(), txHex)
+	if err != nil {
+		log.Fatal(err)
+	}
+	typeOfReceipt := reflect.TypeOf(receipt)
+	if reflect.TypeOf(receipt).Name() == TypeName {
+		typeOfReceipt.FieldByName(TypeName)
+		method, _ := typeOfReceipt.MethodByName("AddInfo")
+		fmt.Println(method.Name)
+
+	}
+
+	fmt.Println(receipt.Status) // 1
+	fmt.Println(receipt.Logs)   // ...
 }

@@ -2,12 +2,14 @@ package business
 
 // 业务测试 mt（链名称） Lab（业务名称）_test(测试用例)
 import (
+	"context"
 	"ethDemo/chainClient"
 	"ethDemo/util"
 	"fmt"
 	"github.com/ethereum/go-ethereum/crypto"
 	"log"
 	"math/big"
+	"os"
 	"testing"
 )
 
@@ -63,7 +65,20 @@ func (ct MetaChainLabTest) Transact(t *testing.T) {
 
 	//转账金额
 	price := int64(1000000000000000000) // in wei (1 eth)
-	myChainClient.TransferExchange(priKeyHex, toAddressHex, price)
+	txHex, err := myChainClient.TransferExchange(priKeyHex, toAddressHex, price)
+	if err != nil {
+		t.Errorf("交易异常:%v", err)
+	}
+	//todo 校验exHex 中的交易的内容
+	log.Printf("交易完成了，交易hex:%v\n", txHex)
+	receipt, err := myChainClient.Client().TransactionReceipt(context.Background(), txHex)
+	if err != nil {
+		t.Errorf("Receipt 异常:%v", err)
+	}
+	//todo check is rigth?
+	log.Println("===================================")
+	util.ReflectReceipt(*receipt)
+	log.Println("===================================")
 
 	//transact From Account Balance
 	transAfterFromAddress := myChainClient.GetBalanceByAddress(fromAddressHex)
@@ -195,40 +210,6 @@ func (ct MetaChainLabTest) IsConnected(t *testing.T) bool {
 	return true
 }
 
-//func (ct MetaChainLabTest) mySelfTestFunc(t *testing.T) {
-//	infuraKovanUrl := "https://kovan.infura.io/v3/3f97ae7214cc4e2794bee5bdc3bd6b95"
-//	client, err := ethclient.Dial(infuraKovanUrl)
-//	if err != nil {
-//		log.Fatalf("Oops! There was a problem %v", err)
-//		os.Exit(100)
-//	} else {
-//		fmt.Println("Success! you are connected to the Ethereum Network")
-//	}
-//	kovanTestEthAddress := "0x1D9b2905b2EC7d9F64022c6e698c0d622A35225c"
-//	KovanTestEthValue := client.getBalanceByAddress(toAddressHex)
-//	fmt.Printf("myAddress is %v,it's Eth Value in Kovan Testnet is %v\n", kovanTestEthAddress, KovanTestEthValue)
-//
-//	// 根据账户地址和区块高度查询，区块交易的金额。 这个功能需要https://infura.io/dashboard 中购买 archive Data 功能才能调用api
-//	//KovanTestEthBlockNums := []int64{31866217, 31866202}
-//	//KovanTestEthValueAtBlock := getBalanceFromBlockNum(*chainClient, kovanTestEthAddress, KovanTestEthBlockNums[0])
-//	//fmt.Printf("myAddress is %v,it's in %v BlockNumber ,and Kovan Testnet is %v\n", kovanTestEthAddress, KovanTestEthBlockNums[0], KovanTestEthValueAtBlock)
-//
-//}
-
-//Test开始的是测试用例，用go test 工具会执行的测试用例。
-//  TestChainNumMetaLab 链上最新区块高度,
-//  @Description: 确认目前区块高度（目前有bug需要在第一个testcase执行才能成功，否则区块高度与浏览器获取的高度不一致)
-//  @param t
-//
-func TestChainNumMetaLab(t *testing.T) {
-	t.Run("TestChainNumMetaLab", func(t *testing.T) {
-		t.Helper()
-		var metaChainOptionTest ChainTestingCase
-		metaChainOptionTest = NewMetaChainLabTest()
-		metaChainOptionTest.CheckChainNum(t)
-	})
-}
-
 // business test
 //  TestLaunch
 //  @Description: 区块链网络连接测试用例逻辑
@@ -286,16 +267,6 @@ func TestTransactExchange(t *testing.T) {
 	})
 }
 
-func TestGetBalanceFromBlockNum(t *testing.T) {
-	t.Run("TestGetBlockInfo", func(t *testing.T) {
-		t.Helper()
-		var metaChainOptionTest ChainTestingCase
-		metaChainOptionTest = NewMetaChainLabTest()
-		metaChainOptionTest.CheckChainNum(t)
-
-	})
-}
-
 //func unit test
 func TestGetBlockInfo(t *testing.T) {
 	t.Run("TestGetBlockInfo", func(t *testing.T) {
@@ -308,6 +279,47 @@ func TestGetBlockInfo(t *testing.T) {
 			t.Errorf("Can't get Client")
 		}
 		myChainClient.GetBlockInfo(myChainClient.GetBlockNumber())
-
 	})
+}
+
+//业务测试初始化函数 go test 会被先执行此函数
+func TestMain(m *testing.M) {
+	//连接区块链
+	metaChainOptionTest := NewMetaChainLabTest()
+	//连接区块链
+	myChainConfig := util.NewChainTestYaml(metaChainOptionTest.ConfigFile)
+	myChainClient := chainClient.Launch(myChainConfig.YamlContent)
+	if myChainClient == nil {
+		log.Printf("Can't get Client")
+	}
+
+	var getInfoJson = util.GetInfoJson{}
+	webBlockNum := new(big.Int)
+
+	responseBody, _, _ := util.WebGetRequest(metaChainOptionTest.blockInfoRequestUrl)
+	if responseBody == nil {
+		log.Printf("blockNum in web is %v ", nil)
+	}
+	//调用接口浏览器使用的接口，获取最新区块高度信息
+	webBN := util.ConvertBody2Json(responseBody, getInfoJson, "BlockNumber")
+
+	webBlockNum, ok := webBlockNum.SetString(webBN, 10)
+	if !ok {
+		log.Printf("big int setString is error.")
+	}
+	//blocknum := util.ConvertBody2Json(responseBody, getInfoJson, "BlockNumber")
+	//webBlockNum := big.NewInt()
+
+	// 获取区块链上的最新区块高度
+	nowBlockNum := myChainClient.GetBlockNumber()
+
+	//比较区块高度时是否一致
+	if 0 != nowBlockNum.Cmp(webBlockNum) {
+		log.Printf("blockNum in chain is %v\nblockNum in web is %v ", nowBlockNum, webBlockNum)
+	}
+	// do someting setup
+	exitCode := m.Run()
+	os.Exit(exitCode)
+	// do something teardow
+
 }

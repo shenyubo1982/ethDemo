@@ -1,8 +1,7 @@
 package chainClient
 
+//chainAccount.go 单体测试
 import (
-	"fmt"
-	"log"
 	"testing"
 )
 
@@ -13,8 +12,8 @@ const ConfigFile = "metaTest.yaml"
 //  @Description:
 //  @param t
 //
-func TestLoadChainAccount(t *testing.T) {
-	t.Run("LoadChainAccount", func(t *testing.T) {
+func TestLaunch(t *testing.T) {
+	t.Run("Launch", func(t *testing.T) {
 		t.Helper()
 		keyDir := "../keys/mt"
 		iWantCnt := 15
@@ -22,13 +21,13 @@ func TestLoadChainAccount(t *testing.T) {
 		if cas.cnt != iWantCnt {
 			t.Errorf("生成Account 错误！应该是%v ，实际是 %v", iWantCnt, cas.cnt)
 		}
-		for _, ca := range cas.accounts {
-			address := ca.address
-			priKey := ca.priKey
-			//keyFile := ca.keyFile
-			log.Printf("Address is %v \n privateKey is %v\n", address, priKey)
-			log.Printf("--------------------------------")
-		}
+		//for _, ca := range cas.accounts {
+		//	address := ca.address
+		//	priKey := ca.priKey
+		//	//keyFile := ca.keyFile
+		//	log.Printf("Address is %v \n privateKey is %v\n", address, priKey)
+		//	log.Printf("--------------------------------")
+		//}
 	})
 }
 
@@ -43,12 +42,48 @@ func TestAddAccount(t *testing.T) {
 		if cas.Cnt() != 1 {
 			t.Errorf("应该加载%v个Account,实际是%v", len(keyfileNames), cas.Cnt())
 		}
-		//显示加载账号的信息
-		for _, account := range cas.accounts {
-			log.Printf("priKeyHex %v\n", account.PriKeyHex())
-			log.Printf("PubkeyHex %v\n", account.PubKeyHex())
-			log.Printf("AddressHex %v\n", account.AddressHex())
+		if len(cas.Accounts()) != 1 {
+			t.Errorf("应该加载%v个Account,实际是%v", len(keyfileNames), cas.Cnt())
 		}
+		//判断加载的账号信息是否完整
+		if cas.Account(0).priKey == nil {
+			t.Errorf("加载的账号私钥为空")
+		}
+		if cas.Account(0).PriKeyHex() == "" {
+			t.Errorf("加载的账号私钥Hex不正确")
+		}
+		if cas.Account(0).keyFile != keyfileNames[0] {
+			t.Errorf("加载的账号文件名不匹配")
+		}
+		if cas.Account(0).keyDir != keyDir {
+			t.Errorf("加载的账号目录不匹配")
+		}
+		if cas.Account(0).AddressHex() == "" {
+			t.Errorf("加载的账号地址Hex不正确")
+		}
+		if cas.accounts[0].PubKey() == nil {
+			t.Errorf("加载的账号PubKey不正确")
+		}
+		if cas.Account(0).PubKeyHex() == "" {
+			t.Errorf("加载的账号共钥Hex不正确")
+		}
+
+		if cas.accounts[0].Address().Hex() == "" {
+			t.Errorf("加载的账号Address不正确")
+		}
+		if cas.accounts[0].KeyDir() == "" {
+			t.Errorf("加载的账号KeyDir不正确")
+		}
+		if cas.accounts[0].KeyFile() == "" {
+			t.Errorf("加载的账号KeyFile不正确")
+		}
+		if cas.accounts[0].PriKeyHex() == "" {
+			t.Errorf("加载的账号PriKeyHex不正确")
+		}
+		if cas.accounts[0].PriKey() == nil {
+			t.Errorf("加载的账号PriKey不正确")
+		}
+
 	})
 
 	t.Run("Add 2 Account", func(t *testing.T) {
@@ -65,21 +100,87 @@ func TestAddAccount(t *testing.T) {
 	})
 }
 
+//
+//  TestGetPrivateKey
+//  @Description: 从keystroe中获取privateKey的方法
+//  @param t
+//
 func TestGetPrivateKey(t *testing.T) {
 	keyDir := "../keys/mt"
 	keyfileName := "UTC--2022-06-05T09-29-29.614223000Z--b319c54942ab601d89cab2654afaf9496ddaaa7d"
 	storeFile := keyDir + PathSymbol + keyfileName
+	storeFileErr := keyDir + PathSymbol + keyfileName + "_err"
 	pwd := accountPwd
+	pwdErr := accountPwd + "Err"
 
-	t.Run("GetPrivateKey", func(t *testing.T) {
+	t.Run("GetPrivateKey-Correct", func(t *testing.T) {
 		t.Helper()
-		privateKey := GetPrivateKey(storeFile, pwd)
-		fmt.Println(privateKey)
+		_, err := GetPrivateKey(storeFile, pwd)
+		if err != nil {
+			t.Errorf("GetPrivateKey 报错 %v", err)
+		}
 	})
 
-	t.Run("GetPrivateKeyHex", func(t *testing.T) {
+	t.Run("GetPrivateKey-DirError", func(t *testing.T) {
 		t.Helper()
-		privateKey := GetPrivateKeyHex(storeFile, pwd)
-		fmt.Println(privateKey)
+		_, err := GetPrivateKey(storeFileErr, pwd)
+		if err == nil {
+			t.Errorf("应该报错，没有报错")
+		}
 	})
+
+	t.Run("GetPrivateKey-passwordError", func(t *testing.T) {
+		t.Helper()
+		_, err := GetPrivateKey(storeFile, pwdErr)
+		if err == nil {
+			t.Errorf("应该报错，没有报错")
+		}
+	})
+
+	t.Run("GetPrivateKeyHex-Correct", func(t *testing.T) {
+		t.Helper()
+		_, err := GetPrivateKeyHex(storeFile, pwd)
+		if err != nil {
+			t.Errorf("GetPrivateKey 报错 %v", err)
+		}
+	})
+}
+
+func TestCreateAccountWithKs(t *testing.T) {
+
+	t.Run("createAccountWithKs-Correct", func(t *testing.T) {
+		t.Helper()
+		keyDir := "../keys/mt"
+		_, err := createAccountWithKs(keyDir)
+		if err != nil {
+			t.Errorf("创建账号异常")
+		}
+	})
+
+	t.Run("createAccountWithKs-DirEmpty", func(t *testing.T) {
+		t.Helper()
+		keyDir := ""
+		_, err := createAccountWithKs(keyDir)
+		if err == nil {
+			t.Errorf("创建账号异常没有显示")
+		}
+
+	})
+
+	t.Run("createAccountWithKs-DirNotExist", func(t *testing.T) {
+		t.Helper()
+		keyDir := "../keysErr/mt"
+		_, err := createAccountWithKs(keyDir)
+		if err == nil {
+			t.Errorf("创建账号异常没有显示")
+		}
+	})
+}
+
+func TestLoadChainAccountFromKeyFile(t *testing.T) {
+	t.Run("createAccountWithKs-keyKeyNotExist", func(t *testing.T) {
+		t.Helper()
+		loadChainAccountFromKeyFile("errDir", "errorFileName")
+	})
+
 }
