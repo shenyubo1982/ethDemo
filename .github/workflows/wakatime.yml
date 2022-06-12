@@ -16,3 +16,6 @@ jobs:
           WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
           SHOW_TITLE: true
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          REPOSITORY: <shenyubo1982/ethDemo>
+          # optional, By default, it will automatically use the repository which is executing the workflow.
+
