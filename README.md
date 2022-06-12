@@ -2,6 +2,9 @@
 
 [![wakatime](https://wakatime.com/badge/github/shenyubo1982/ethDemo.svg)](https://wakatime.com/badge/github/shenyubo1982/ethDemo)
 
+<!--START_SECTION:waka-->
+<!--END_SECTION:waka-->
+
 # GoEthereumBook 01：初始化客户端
 
 教程地址
