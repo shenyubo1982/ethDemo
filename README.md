@@ -1,7 +1,5 @@
 # ethDemo
 
-[![wakatime](https://wakatime.com/badge/github/shenyubo1982/ethDemo.svg)](https://wakatime.com/badge/github/shenyubo1982/ethDemo)
-
 <!--START_SECTION:waka-->
 <!--END_SECTION:waka-->
 
