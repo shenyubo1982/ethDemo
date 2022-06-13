@@ -1,10 +1,8 @@
 package util
 
 import (
-	"fmt"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
-	"log"
 )
 
 const YamlPath = "../config/"
@@ -41,17 +39,17 @@ func NewChainTestYaml(fileName string) *ChainTestYaml {
 	//读取yaml文件到缓存中
 	config, err := ioutil.ReadFile(instance.filePath)
 	if err != nil {
-		fmt.Print(err)
+		return nil
 	}
 	//yaml文件内容影射到结构体中
 	err2 := yaml.Unmarshal([]byte(config), &yc)
 	if err2 != nil {
-		log.Fatalf("cannot unmarshal data: %v", err2)
+		return nil
 	}
 	instance.YamlContent = yc
 	return instance
 }
 
-func (cc *ChainTestYaml) getYamlContent() *YamlContent {
+func (cc *ChainTestYaml) GetYamlContent() *YamlContent {
 	return &cc.YamlContent
 }

@@ -6,7 +6,6 @@ import (
 	"errors"
 	evidencecontract "ethDemo/abi"
 	"ethDemo/util"
-	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -15,7 +14,6 @@ import (
 	"log"
 	"math"
 	"math/big"
-	"reflect"
 )
 
 const PathSymbol = "/"
@@ -145,17 +143,17 @@ func (cc *chainClient) CallContract(title string, name string, content string) s
 	}
 
 	// todo reflect methods
-	typeOfContract := reflect.TypeOf(instance)
-	for i := 0; i < typeOfContract.NumMethod(); i++ {
-		fmt.Printf(
-			"method is %s, type is %s, kind is %s.\n",
-			typeOfContract.Method(i).Name,
-			typeOfContract.Method(i).Type,
-			typeOfContract.Method(i).Type.Kind(),
-		)
-	}
-	method, _ := typeOfContract.MethodByName("AddInfo")
-	fmt.Printf("method is %s, type is %s, kind is %s.\n", method.Name, method.Type, method.Type.Kind())
+	//typeOfContract := reflect.TypeOf(instance)
+	//for i := 0; i < typeOfContract.NumMethod(); i++ {
+	//	fmt.Printf(
+	//		"method is %s, type is %s, kind is %s.\n",
+	//		typeOfContract.Method(i).Name,
+	//		typeOfContract.Method(i).Type,
+	//		typeOfContract.Method(i).Type.Kind(),
+	//	)
+	//}
+	//method, _ := typeOfContract.MethodByName("AddInfo")
+	//fmt.Printf("method is %s, type is %s, kind is %s.\n", method.Name, method.Type, method.Type.Kind())
 
 	// todo reflect methods
 
@@ -180,18 +178,18 @@ func (cc *chainClient) GetBlockNumber() *big.Int {
 	return header.Number
 }
 
-func (cc chainClient) GetBlockInfo(blockNumber *big.Int) {
-	block, err := cc.client.BlockByNumber(context.Background(), blockNumber)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(block.Number().Uint64())     // 5671744
-	fmt.Println(block.Time())                // 1527211625
-	fmt.Println(block.Difficulty().Uint64()) // 3217000136609065
-	fmt.Println(block.Hash().Hex())          // 0x9e8751ebb5069389b855bba72d94902cc385042661498a415979b7b6ee9ba4b9
-	fmt.Println(len(block.Transactions()))   // 144
-}
+//func (cc chainClient) GetBlockInfo(blockNumber *big.Int) {
+//	block, err := cc.client.BlockByNumber(context.Background(), blockNumber)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//
+//	fmt.Println(block.Number().Uint64())     // 5671744
+//	fmt.Println(block.Time())                // 1527211625
+//	fmt.Println(block.Difficulty().Uint64()) // 3217000136609065
+//	fmt.Println(block.Hash().Hex())          // 0x9e8751ebb5069389b855bba72d94902cc385042661498a415979b7b6ee9ba4b9
+//	fmt.Println(len(block.Transactions()))   // 144
+//}
 
 // TransferExchange
 //  @Description: 发起交易(转账)
@@ -281,4 +279,34 @@ func Launch(myChainConfig util.YamlContent) *chainClient {
 		instance.client = client
 		return instance
 	}
+}
+
+// ExchangeIsSucceed 判断交易是否完成
+func (cc chainClient) ExchangeIsSucceed(txHex common.Hash) (bool, error) {
+	//todo 校验exHex 中的交易的内容
+	//log.Printf("交易已提交，交易hex:%v\n", txHex)
+
+	// 获取交易receipt
+	receipt, err := cc.Client().TransactionReceipt(context.Background(), txHex)
+	if err != nil {
+		return false, err
+	}
+
+	//print(receipt.Status)
+	//log.Println("===================================")
+	status := util.ReflectReceipt(*receipt, "Status", false)
+	//log.Printf("tx_Status is %v\n", status)
+	//log.Println("===================================")
+
+	// 没有结果
+	if status == nil {
+		return false, errors.New("ReflectReceipt not found Key")
+	}
+	//不成功
+	if status == 0 {
+		return false, nil
+	}
+	//成功
+	return true, nil
+
 }

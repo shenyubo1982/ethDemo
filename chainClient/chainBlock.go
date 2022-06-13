@@ -11,12 +11,12 @@ import (
 )
 
 type ChainBlock struct {
-	blockNum          big.Int //区块高度
-	blockHash         string  //区块hash
-	blockDifficulty   uint64  //区块难度
-	blockTime         uint64  //时间戳
-	blockTransactions int     //区块中包含的交易数量
-	chainTransaction  []chainTransaction
+	blockNum          big.Int     //区块高度
+	blockHash         common.Hash //区块hash
+	blockDifficulty   uint64      //区块难度
+	blockTime         uint64      //时间戳
+	blockTransactions int         //区块中包含的交易数量
+	chainTransactions []chainTransaction
 }
 
 // NewChainBlock 构造器(根据区块高度）
@@ -29,11 +29,11 @@ func NewChainBlock(blockNum big.Int) *ChainBlock {
 //todo 查询区块信息
 
 func (c *ChainBlock) ChainTransaction() []chainTransaction {
-	return c.chainTransaction
+	return c.chainTransactions
 }
 
-func (c *ChainBlock) setChainTransaction(chainTransaction []chainTransaction) {
-	c.chainTransaction = chainTransaction
+func (c *ChainBlock) setChainTransaction(chainTransactions []chainTransaction) {
+	c.chainTransactions = chainTransactions
 }
 
 func (c *ChainBlock) BlockNum() big.Int {
@@ -44,11 +44,11 @@ func (c *ChainBlock) setBlockNum(blockNum big.Int) {
 	c.blockNum = blockNum
 }
 
-func (c *ChainBlock) BlockHash() string {
+func (c *ChainBlock) BlockHash() common.Hash {
 	return c.blockHash
 }
 
-func (c *ChainBlock) setBlockHash(blockHash string) {
+func (c *ChainBlock) setBlockHash(blockHash common.Hash) {
 	c.blockHash = blockHash
 }
 
@@ -91,4 +91,27 @@ func getReceiptStatus(client *ethclient.Client, txHex common.Hash, TypeName stri
 
 	fmt.Println(receipt.Status) // 1
 	fmt.Println(receipt.Logs)   // ...
+}
+
+func GetBlockInfo(cc chainClient, blockNumber *big.Int) *ChainBlock {
+	blockInstance := new(ChainBlock)
+	block, err := cc.client.BlockByNumber(context.Background(), blockNumber)
+	if err != nil {
+		log.Fatal(err)
+	}
+	blockInstance.blockDifficulty = block.Difficulty().Uint64()
+	blockInstance.blockNum = *block.Number()
+	blockInstance.blockTime = block.Time()
+	blockInstance.blockHash = block.Hash()
+
+	//todo add Transactions
+	//blockInstance.chainTransactions = block.Transactions()
+
+	//fmt.Println(block.Number().Uint64())     // 5671744
+	//fmt.Println(block.Time())                // 1527211625
+	//fmt.Println(block.Difficulty().Uint64()) // 3217000136609065
+	//fmt.Println(block.Hash().Hex())          // 0x9e8751ebb5069389b855bba72d94902cc385042661498a415979b7b6ee9ba4b9
+	//fmt.Println(len(block.Transactions()))   // 144
+
+	return blockInstance
 }

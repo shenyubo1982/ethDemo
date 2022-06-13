@@ -9,6 +9,6 @@
 
 
 # go test -v -covermode=set -coverprofile=hint_test.out ./ >>hint_test.out
-go test -v -covermode=set -coverprofile=hint_test.out ./
-go test -coverprofile=coverage.out ./
-go tool cover -html=coverage.out
+go test -v -covermode=set -coverprofile=../testing/hint_test_chainClient.out ./
+go test -coverprofile=../testing/coverage_test_chainClient.out ./
+go tool cover -html=../testing/coverage_test_chainClient.out

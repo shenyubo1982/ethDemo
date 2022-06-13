@@ -2,14 +2,10 @@ package business
 
 // 业务测试 mt（链名称） Lab（业务名称）_test(测试用例)
 import (
-	"context"
 	"ethDemo/chainClient"
 	"ethDemo/util"
 	"fmt"
-	"github.com/ethereum/go-ethereum/crypto"
-	"log"
 	"math/big"
-	"os"
 	"testing"
 )
 
@@ -56,12 +52,12 @@ func (ct MetaChainLabTest) Transact(t *testing.T) {
 	cas := chainClient.LoadChainAccount(iWantCnt, keyDir)
 	// to Account's Address
 	toAddressHex := cas.Account(0).Address().Hex()
-	transBeforeToAddress := myChainClient.GetBalanceByAddress(toAddressHex)
+	//transBeforeToAddress := myChainClient.GetBalanceByAddress(toAddressHex)
 
 	// transact From Account Balance
-	acc1Key, _ := crypto.HexToECDSA(priKeyHex)
-	fromAddressHex := crypto.PubkeyToAddress(acc1Key.PublicKey).Hex()
-	transBeforeFromAddress := myChainClient.GetBalanceByAddress(fromAddressHex)
+	//acc1Key, _ := crypto.HexToECDSA(priKeyHex)
+	//fromAddressHex := crypto.PubkeyToAddress(acc1Key.PublicKey).Hex()
+	//transBeforeFromAddress := myChainClient.GetBalanceByAddress(fromAddressHex)
 
 	//转账金额
 	price := int64(1000000000000000000) // in wei (1 eth)
@@ -70,41 +66,52 @@ func (ct MetaChainLabTest) Transact(t *testing.T) {
 		t.Errorf("交易异常:%v", err)
 	}
 	//todo 校验exHex 中的交易的内容
-	log.Printf("交易完成了，交易hex:%v\n", txHex)
-	receipt, err := myChainClient.Client().TransactionReceipt(context.Background(), txHex)
+	//log.Printf("交易完成了，交易hex:%v\n", txHex)
+	//// 获取交易receipt
+	//receipt, err := myChainClient.Client().TransactionReceipt(context.Background(), txHex)
+	//if err != nil {
+	//	t.Errorf("Receipt 异常:%v", err)
+	//}
+
+	succeed, err := myChainClient.ExchangeIsSucceed(txHex)
 	if err != nil {
-		t.Errorf("Receipt 异常:%v", err)
+		t.Errorf("无法查询交易记录:%v", err)
 	}
-	//todo check is rigth?
-	log.Println("===================================")
-	util.ReflectReceipt(*receipt)
-	log.Println("===================================")
-
-	//transact From Account Balance
-	transAfterFromAddress := myChainClient.GetBalanceByAddress(fromAddressHex)
-	//transact To Account Balance
-	transAfterToAddress := myChainClient.GetBalanceByAddress(toAddressHex)
-
-	// Todo:Bug 验证的方法需要修改。获取From和To转账地址在转账前的金额。发起转账交易后，根据交易id，确认区块链已成功后，再确认From和To转账地址最新的金额。进行比较。
-
-	//检查Transact From 账号的val
-	//1：前面的big.Int 实例大于cmp方法big.Int 参数
-	if -1 != transAfterFromAddress.Cmp(transBeforeFromAddress) {
-		t.Errorf("转账%v没有成功.\nbefore Val:%v \nafter val:%v", fromAddressHex, transBeforeFromAddress, transAfterFromAddress)
-	} else {
-		log.Printf("转账%v成功\n转账前:%v \n转账之后:%v", fromAddressHex, transBeforeFromAddress, transAfterFromAddress)
+	if !succeed {
+		t.Errorf("交易失败")
 	}
-	//检查Transact To 账号的val
-	if 1 != transAfterToAddress.Cmp(transBeforeToAddress) {
-		t.Errorf("转账%v没有成功.\nbefore Val:%v \nafter val:%v", toAddressHex, transBeforeToAddress, transAfterToAddress)
-	} else {
-		log.Printf("转账%v成功\n转账前:%v\n转账之后:%v\n", toAddressHex, transBeforeToAddress, transAfterToAddress)
-	}
+	//print(receipt.Status)
+	////todo check is rigth?
+	//log.Println("===================================")
+	//status := util.ReflectReceipt(*receipt, "Status")
+	//log.Printf("tx_Status is %v\n", status)
+	//log.Println("===================================")
+
+	////transact From Account Balance
+	//transAfterFromAddress := myChainClient.GetBalanceByAddress(fromAddressHex)
+	////transact To Account Balance
+	//transAfterToAddress := myChainClient.GetBalanceByAddress(toAddressHex)
+	//
+	//// Todo:Bug 验证的方法需要修改。获取From和To转账地址在转账前的金额。发起转账交易后，根据交易id，确认区块链已成功后，再确认From和To转账地址最新的金额。进行比较。
+	//
+	////检查Transact From 账号的val
+	////1：前面的big.Int 实例大于cmp方法big.Int 参数
+	//if -1 != transAfterFromAddress.Cmp(transBeforeFromAddress) {
+	//	t.Errorf("转账%v没有成功.\nbefore Val:%v \nafter val:%v", fromAddressHex, transBeforeFromAddress, transAfterFromAddress)
+	//} else {
+	//	log.Printf("转账%v成功\n转账前:%v \n转账之后:%v", fromAddressHex, transBeforeFromAddress, transAfterFromAddress)
+	//}
+	////检查Transact To 账号的val
+	//if 1 != transAfterToAddress.Cmp(transBeforeToAddress) {
+	//	t.Errorf("转账%v没有成功.\nbefore Val:%v \nafter val:%v", toAddressHex, transBeforeToAddress, transAfterToAddress)
+	//} else {
+	//	log.Printf("转账%v成功\n转账前:%v\n转账之后:%v\n", toAddressHex, transBeforeToAddress, transAfterToAddress)
+	//}
 
 }
 
 //
-//  CreateAccount
+//  CreateAccount 接口定义的必须实现的测试case
 //  @Description: 创建n个账号，并保存在store中
 //  @receiver ct
 //  @param newCount
@@ -125,7 +132,7 @@ func (ct MetaChainLabTest) PressureAttack(t *testing.T) {
 }
 
 //
-//  CheckChainNum
+//  CheckChainNum 自定义测试case
 //  @Description: 测试区块链高度是否显示正常。
 // 	测试用例逻辑：获取区块链最新区块num，与区块链浏览器中显示的区块链最新区块链是否一致。
 //  @ct MetaChainLabTest
@@ -138,6 +145,7 @@ func (ct MetaChainLabTest) CheckChainNum(t *testing.T) {
 		t.Errorf("Can't get Client")
 	}
 
+	//从业务浏览器中获取最新的区块高度
 	var getInfoJson = util.GetInfoJson{}
 	webBlockNum := new(big.Int)
 
@@ -146,18 +154,20 @@ func (ct MetaChainLabTest) CheckChainNum(t *testing.T) {
 		t.Errorf("blockNum in web is %v ", nil)
 	}
 	//调用接口浏览器使用的接口，获取最新区块高度信息
-	webBN := util.ConvertBody2Json(responseBody, getInfoJson, "BlockNumber")
+	webBN := util.SearchBody2Json(responseBody, getInfoJson, "BlockNumber")
 
 	webBlockNum, ok := webBlockNum.SetString(webBN, 10)
 	if !ok {
 		panic("big int setString is error.")
 	}
-	//blocknum := util.ConvertBody2Json(responseBody, getInfoJson, "BlockNumber")
+	//blocknum := util.SearchBody2Json(responseBody, getInfoJson, "BlockNumber")
 	//webBlockNum := big.NewInt()
 
-	// 获取区块链上的最新区块高度
-	nowBlockNum := myChainClient.GetBlockNumber()
+	//// 获取区块链上的最新区块高度
+	//nowBlockNum := myChainClient.GetBlockNumber()
 
+	chainBlock := chainClient.GetBlockInfo(*myChainClient, webBlockNum)
+	nowBlockNum := chainBlock.BlockNum()
 	//比较区块高度时是否一致
 	if 0 != nowBlockNum.Cmp(webBlockNum) {
 		t.Errorf("blockNum in chain is %v\nblockNum in web is %v ", nowBlockNum, webBlockNum)
@@ -210,13 +220,13 @@ func (ct MetaChainLabTest) IsConnected(t *testing.T) bool {
 	return true
 }
 
-// business test
-//  TestLaunch
+// business test from interface
+//  TestIsConnected
 //  @Description: 区块链网络连接测试用例逻辑
 //  @param t
 //
-func TestLaunchMetaLab(t *testing.T) {
-	t.Run("TestLaunchMetaLab", func(t *testing.T) {
+func TestIsConnected(t *testing.T) {
+	t.Run("TestIsConnected", func(t *testing.T) {
 		t.Helper()
 		var metaChainOptionTest ChainTestingCase
 		metaChainOptionTest = NewMetaChainLabTest()
@@ -227,7 +237,7 @@ func TestLaunchMetaLab(t *testing.T) {
 	})
 }
 
-// business test
+// business test from interface
 func TestCreateAccount(t *testing.T) {
 	t.Run("TestCreateAccount", func(t *testing.T) {
 		t.Helper()
@@ -267,59 +277,18 @@ func TestTransactExchange(t *testing.T) {
 	})
 }
 
-//func unit test
-func TestGetBlockInfo(t *testing.T) {
-	t.Run("TestGetBlockInfo", func(t *testing.T) {
+/**/
+func TestGetBlockNum(t *testing.T) {
+	t.Run("TestGetBlockNum", func(t *testing.T) {
 		t.Helper()
 		metaChainOptionTest := NewMetaChainLabTest()
-		//连接区块链
-		myChainConfig := util.NewChainTestYaml(metaChainOptionTest.ConfigFile)
-		myChainClient := chainClient.Launch(myChainConfig.YamlContent)
-		if myChainClient == nil {
-			t.Errorf("Can't get Client")
-		}
-		myChainClient.GetBlockInfo(myChainClient.GetBlockNumber())
+		metaChainOptionTest.CheckChainNum(t)
 	})
-}
-
-//业务测试初始化函数 go test 会被先执行此函数
-func TestMain(m *testing.M) {
-	//连接区块链
-	metaChainOptionTest := NewMetaChainLabTest()
-	//连接区块链
-	myChainConfig := util.NewChainTestYaml(metaChainOptionTest.ConfigFile)
-	myChainClient := chainClient.Launch(myChainConfig.YamlContent)
-	if myChainClient == nil {
-		log.Printf("Can't get Client")
-	}
-
-	var getInfoJson = util.GetInfoJson{}
-	webBlockNum := new(big.Int)
-
-	responseBody, _, _ := util.WebGetRequest(metaChainOptionTest.blockInfoRequestUrl)
-	if responseBody == nil {
-		log.Printf("blockNum in web is %v ", nil)
-	}
-	//调用接口浏览器使用的接口，获取最新区块高度信息
-	webBN := util.ConvertBody2Json(responseBody, getInfoJson, "BlockNumber")
-
-	webBlockNum, ok := webBlockNum.SetString(webBN, 10)
-	if !ok {
-		log.Printf("big int setString is error.")
-	}
-	//blocknum := util.ConvertBody2Json(responseBody, getInfoJson, "BlockNumber")
-	//webBlockNum := big.NewInt()
-
-	// 获取区块链上的最新区块高度
-	nowBlockNum := myChainClient.GetBlockNumber()
-
-	//比较区块高度时是否一致
-	if 0 != nowBlockNum.Cmp(webBlockNum) {
-		log.Printf("blockNum in chain is %v\nblockNum in web is %v ", nowBlockNum, webBlockNum)
-	}
-	// do someting setup
-	exitCode := m.Run()
-	os.Exit(exitCode)
-	// do something teardow
 
 }
+
+////业务测试初始化函数 go test 会被先执行此函数
+//func TestMain(m *testing.M) {
+//	log.Println("---------测试开始---------")
+//
+//}

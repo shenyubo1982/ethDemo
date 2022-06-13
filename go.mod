@@ -2,7 +2,11 @@ module ethDemo
 
 go 1.17
 
-require github.com/ethereum/go-ethereum v1.10.18
+require (
+	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1
+	github.com/ethereum/go-ethereum v1.10.18
+	gopkg.in/yaml.v3 v3.0.1
+)
 
 require (
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
@@ -20,5 +24,4 @@ require (
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
