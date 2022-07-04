@@ -180,7 +180,7 @@ func TestCreateAccountWithKs(t *testing.T) {
 func TestLoadChainAccountFromKeyFile(t *testing.T) {
 	t.Run("createAccountWithKs-keyKeyNotExist", func(t *testing.T) {
 		t.Helper()
-		loadChainAccountFromKeyFile("errDir", "errorFileName")
+		LoadChainAccountFromKeyFile("errDir", "errorFileName")
 	})
 
 }
