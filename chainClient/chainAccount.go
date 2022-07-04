@@ -96,7 +96,7 @@ func (c *chainAccounts) AddAccount(keyDir string, keyFile string) {
 	if c.accounts == nil {
 		c.accounts = make([]chainAccount, 0, 1)
 	}
-	account, _ := loadChainAccountFromKeyFile(keyDir, keyFile)
+	account, _ := LoadChainAccountFromKeyFile(keyDir, keyFile)
 	c.accounts = append(c.accounts, *account)
 	c.cnt += 1
 }
@@ -138,14 +138,13 @@ func LoadChainAccount(loadCnt int, keyFileDirectory string) *chainAccounts {
 	return instance
 }
 
-//
-//  loadChainAccountFromKeyFile
+// LoadChainAccountFromKeyFile
 //  @Description: 加载1个Address 从 key 文件库中
 //  @param keyDir : keyStore 目录
 //  @param keyFile: keyStore name
 //  @return *chainAccount account
 //
-func loadChainAccountFromKeyFile(keyDir string, keyFile string) (*chainAccount, error) {
+func LoadChainAccountFromKeyFile(keyDir string, keyFile string) (*chainAccount, error) {
 	instance := new(chainAccount)
 	// check file is existed and actually a file.
 	storeFile := keyDir + PathSymbol + keyFile
