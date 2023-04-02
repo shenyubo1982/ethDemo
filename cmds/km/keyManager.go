@@ -42,6 +42,9 @@ func Run() {
 				address := chainAccount.AddressHex()
 				color.BgCyan.Print("Address: ")
 				color.BgYellow.Println(address)
+				priKey := chainAccount.PriKeyHex()
+				color.BgCyan.Print("PriKey: ")
+				color.BgYellow.Println(priKey)
 			}
 		}
 		if err != nil && err.Error() == "quit" {

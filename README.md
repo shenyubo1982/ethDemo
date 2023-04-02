@@ -125,4 +125,11 @@ func convertWeiToBi(balance *big.Int) (ethValue *big.Float)
 # 2022.06.10 mac mini workspace test.
 # 2022.07.04 add new feat:from terminal to show eth address with local keystore folder.
 
-​
+#2023.04.02 add git command
+```
+git push -u github github/master master
+```
+
+
+
+

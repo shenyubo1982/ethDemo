@@ -2,8 +2,8 @@ package menu
 
 import (
 	"bufio"
+	ac "ethDemo/cmds/ac"
 	km "ethDemo/cmds/km"
-
 	//l1 "demo/src/lesson01"
 	//l2 "demo/src/lesson02"
 	//l3 "demo/src/lesson03"
@@ -28,6 +28,7 @@ const (
 	exit MenuContent = iota
 	//lesson01 MenuContent = iota + 1 //Say "Hello"
 	keyManager
+	AccountCreate
 	//lesson02
 	//lesson03
 	//lesson04
@@ -49,6 +50,8 @@ func (m MenuContent) String() string {
 	switch m {
 	case exit:
 		return EXIT
+	case AccountCreate:
+		return "Account Create"
 	case keyManager:
 		return "KeyStore Manager"
 		//case lesson01:
@@ -124,6 +127,8 @@ func OrderMenu(m MenuContent) {
 	case keyManager:
 		doFunc(km.Run)
 		//case lesson02:
+	case AccountCreate:
+		doFunc(ac.Run)
 		//	//doFunc(l2.Play)
 		//case lesson03:
 		//	//doFunc(l3.Do)
