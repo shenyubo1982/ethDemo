@@ -85,3 +85,9 @@ fabric.properties
 
 # ethereum key store Files.
 */*UTC--*
+
+
+#bin
+./bin/
+
+
