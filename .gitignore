@@ -88,6 +88,5 @@ fabric.properties
 
 
 #bin
-./bin/
-
+bin/
 

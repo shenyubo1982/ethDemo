@@ -17,7 +17,8 @@ type EthKovanTest struct {
 func NewEthKovanTest() *EthKovanTest {
 	instance := new(EthKovanTest)
 	//添加测试需要的常量
-	instance.ConfigFile = "kovanTest.yaml"
+	//instance.ConfigFile = "kovanTest.yaml"
+	instance.ConfigFile = "goerli.yaml"
 	instance.blockInfoRequestUrl = ""
 	return instance
 }

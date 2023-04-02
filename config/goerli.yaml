@@ -1,0 +1,8 @@
+chainUrl: https://goerli.infura.io/v3/3f97ae7214cc4e2794bee5bdc3bd6b95
+contractAddressHex:
+adminAddressHex: 0x1D9b2905b2EC7d9F64022c6e698c0d622A35225c
+adminPrivateKeyHex:
+chainID: 77
+abi:
+gasLimit :
+gasPrice :
