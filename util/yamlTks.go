@@ -53,3 +53,40 @@ func NewChainTestYaml(fileName string) *ChainTestYaml {
 func (cc *ChainTestYaml) GetYamlContent() *YamlContent {
 	return &cc.YamlContent
 }
+
+// WalletYaml wallet yaml
+type WalletYaml struct {
+	filePath    string
+	YamlContent YamlWalletContent
+}
+
+// YamlWalletContent  wallet config file yaml walletConfig.yaml
+type YamlWalletContent struct {
+	WalletAddressDir  string `yaml:"walletAddressDir"`
+	WalletAddressFile string `yaml:"walletAddressFile"`
+	WalletKeyStoreDir string `yaml:"walletKeyStoreDir"`
+	WalletSnapShotDir string `yaml:"walletSnapShotDir"`
+	EthScanAPI        string `yaml:"ethScanAPI"`
+}
+
+func (cc *WalletYaml) GetYamlContent() *YamlWalletContent {
+	return &cc.YamlContent
+}
+
+func NewWalletYaml(fileName string) *WalletYaml {
+	instance := new(WalletYaml)
+	instance.filePath = YamlPath + fileName
+	yc := YamlWalletContent{}
+	//读取yaml文件到缓存中
+	config, err := ioutil.ReadFile(instance.filePath)
+	if err != nil {
+		return nil
+	}
+	//yaml文件内容影射到结构体中
+	err2 := yaml.Unmarshal([]byte(config), &yc)
+	if err2 != nil {
+		return nil
+	}
+	instance.YamlContent = yc
+	return instance
+}

@@ -1,0 +1,8 @@
+chainUrl: http://172.17.4.13:7755
+contractAddressHex: input your address
+adminAddressHex:
+adminPrivateKeyHex: input your private key with your address
+chainID: 77
+abi: ./abi/EvidenceContract.abixxxxxx
+gasLimit: 9999999
+gasPrice: 1000000000

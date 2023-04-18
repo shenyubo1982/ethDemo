@@ -4,6 +4,7 @@ import (
 	"bufio"
 	ac "ethDemo/cmds/ac"
 	km "ethDemo/cmds/km"
+	wm "ethDemo/cmds/wallet"
 	//l1 "demo/src/lesson01"
 	//l2 "demo/src/lesson02"
 	//l3 "demo/src/lesson03"
@@ -29,6 +30,7 @@ const (
 	//lesson01 MenuContent = iota + 1 //Say "Hello"
 	keyManager
 	AccountCreate
+	walletManager
 	//lesson02
 	//lesson03
 	//lesson04
@@ -54,6 +56,8 @@ func (m MenuContent) String() string {
 		return "Account Create"
 	case keyManager:
 		return "KeyStore Manager"
+	case walletManager:
+		return "snapshot Wallet"
 		//case lesson01:
 		//	return "Say hello"
 		//case lesson02:
@@ -129,6 +133,8 @@ func OrderMenu(m MenuContent) {
 		//case lesson02:
 	case AccountCreate:
 		doFunc(ac.Run)
+	case walletManager:
+		doFunc(wm.Run)
 		//	//doFunc(l2.Play)
 		//case lesson03:
 		//	//doFunc(l3.Do)

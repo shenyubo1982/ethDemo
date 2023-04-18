@@ -1,0 +1,5 @@
+walletAddressDir: /Users/bobo/Dropbox/web3/Account/
+walletAddressFile: CoinAccount
+walletKeyStoreDir: /Users/bobo/GolandProjects/ethDemo/keys/wallet/
+walletSnapShotDir: /Users/bobo/GolandProjects/ethDemo/report/
+ethScanAPI: input your ethScan API

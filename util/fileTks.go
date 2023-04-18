@@ -1,6 +1,8 @@
 package util
 
 import (
+	"bufio"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -18,4 +20,36 @@ func IsDigit(checkStr string) bool {
 	//str := "124534"
 	result, _ := regexp.MatchString(pattern, checkStr)
 	return result
+}
+
+// ReadFileAllContent ReadFileContent 读取文件方法
+func ReadFileAllContent(dirName string, fileName string) []string {
+	var fileContent []string
+
+	fileFullPath := dirName + fileName
+	fmt.Println(fileFullPath)
+
+	readFile, err := os.Open(fileFullPath)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+	fileScanner := bufio.NewScanner(readFile)
+
+	fileScanner.Split(bufio.ScanLines)
+
+	for fileScanner.Scan() {
+		fileContent = append(fileContent, fileScanner.Text())
+		//fmt.Println(fileScanner.Text())
+	}
+
+	_ = readFile.Close()
+
+	return fileContent
+
+	//f, err := ioutil.ReadFile(fileFullPath)
+	//if err != nil {
+	//	fmt.Println("read fail", err)
+	//}
+	//return string(f)
 }

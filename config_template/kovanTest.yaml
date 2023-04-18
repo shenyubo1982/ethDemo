@@ -1,0 +1,8 @@
+chainUrl: https://kovan.infura.io/v3/3f97ae7214cc4e2794bee5bdc3bd6b95
+contractAddressHex:
+adminAddressHex: please input your address
+adminPrivateKeyHex:
+chainID: 77
+abi:
+gasLimit:
+gasPrice:

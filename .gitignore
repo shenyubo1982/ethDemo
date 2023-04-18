@@ -82,6 +82,7 @@ fabric.properties
 
 # test report
 */*.out
+report/
 
 # ethereum key store Files.
 */*UTC--*
@@ -90,4 +91,7 @@ fabric.properties
 #bin
 bin/
 keys/
+
+#config
+config/
 

@@ -26,9 +26,9 @@ func Run() {
 	if dir == "" {
 		dir = "keys/mt"
 		serverPath := util.GetRunPath(dir, "") //get abs path
-		keyMenu = readFiles(serverPath)
+		keyMenu = ReadFiles(serverPath)
 	} else {
-		keyMenu = readFiles(dir)
+		keyMenu = ReadFiles(dir)
 	}
 
 	for {
@@ -65,7 +65,7 @@ type keyStoreMenu struct {
 }
 
 //read files from dir
-func readFiles(serverPath string) *keyStoreMenu {
+func ReadFiles(serverPath string) *keyStoreMenu {
 	fileMenu := new(keyStoreMenu)
 	//serverPath := util.GetRunPath(dir, "") //get abs path
 	fileMenu.filePath = serverPath
@@ -74,9 +74,21 @@ func readFiles(serverPath string) *keyStoreMenu {
 		menuId := fileId + 1
 		fileMenu.menuCnt = menuId
 		fileMenu.fileNames = append(fileMenu.fileNames, f.Name())
+		// Modify by bobo show address.do not show file name . start
+		// UTC--2023-04-07T05-55-34.618103000Z--
+		//debugFileName := fileMenu.fileNames[len("UTC--2023-04-07T05-55-34.618103000Z--"):]
+		debugFileName := fileMenu.fileNames[menuId-1]
+		//fmt.Println("debugFileName: ", debugFileName)
+		//获取第三位到左后位置的debugFileName字符串
+		debugFileOutPrintName := debugFileName[len("UTC--2023-04-07T05-55-34.618103000Z--"):]
+		// Modify by bobo show address.do not show file name . end
+
 		listNum := fmt.Sprintf("%02d ", menuId)
 		color.BgCyan.Print(listNum)
-		color.BgYellow.Println(f.Name())
+		// Modify by bobo show address.do not show file name . start
+		//color.BgYellow.Println(f.Name())
+		color.BgYellow.Println(debugFileOutPrintName)
+		// Modify by bobo show address.do not show file name . End
 	}
 	return fileMenu
 }
@@ -105,3 +117,5 @@ func selectFunc() (int, error) {
 	return -1, err
 
 }
+
+// todo 读取文件并将文件编号，和地址保持在对象中
