@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/gookit/color"
 	"io/ioutil"
 	"log"
 )
@@ -116,14 +117,18 @@ func LoadChainAccount(loadCnt int, keyFileDirectory string) *chainAccounts {
 	if keyFileDirectory != "" {
 		//需要从存量账号中获取测试账号
 		keyFiles := util.GetFilesInDir(keyFileDirectory)
+		color.Warnf("LoadChainAccount: %d accounts loaded from %s \r", len(keyFiles), keyFileDirectory)
 		existedKeyCnt = len(keyFiles)
 	}
 	//填补不足的账号
+	// add progress bar
+	bar := util.ProgressBarConfig(loadCnt-existedKeyCnt, "Account creating ...", 2, 1)
 	for i := 0; i < loadCnt-existedKeyCnt; i++ {
 		_, err := createAccountWithKs(keyFileDirectory)
 		if err != nil {
 			log.Printf("LoadChainAccount Running Error: %v \n", err)
 		}
+		util.ShowProgressBar(bar)
 	}
 	//重新获取加载的文件列表
 	keyFiles = util.GetFilesInDir(keyFileDirectory)
@@ -131,9 +136,11 @@ func LoadChainAccount(loadCnt int, keyFileDirectory string) *chainAccounts {
 		panic("out of chain account instance.")
 	}
 
+	barAdd := util.ProgressBarConfig(loadCnt, "Account Loading...", 2, 2)
 	for i := 0; i < loadCnt; i++ {
 		// 从keyfile导入账号
 		instance.AddAccount(keyFileDirectory, keyFiles[i])
+		util.ShowProgressBar(barAdd)
 	}
 	return instance
 }

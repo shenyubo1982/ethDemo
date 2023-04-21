@@ -1,8 +1,11 @@
 package util
 
 import (
+	"bufio"
 	"fmt"
+	"github.com/gookit/color"
 	"github.com/schollz/progressbar/v3"
+	"os"
 )
 
 //var bar *progressbar.ProgressBar
@@ -30,4 +33,14 @@ func ProgressBarConfig(size int, Description string, part int, partIndex int) *p
 
 func ShowProgressBar(bar *progressbar.ProgressBar) {
 	bar.Add(1)
+}
+
+func Confirm() {
+	//等等确认.
+	color.Red.Print("\nplease enter any key to Exit.")
+	reader := bufio.NewReader(os.Stdin)
+	_, err := reader.ReadString('\n')
+	if err != nil {
+		color.Warn.Println("input error.")
+	}
 }

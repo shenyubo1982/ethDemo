@@ -3,6 +3,7 @@ package ac
 import (
 	"bufio"
 	chainClient "ethDemo/chainClient"
+	"ethDemo/util"
 	"github.com/gookit/color"
 	"os"
 	"path/filepath"
@@ -44,9 +45,11 @@ func createAccount(iWantCnt int) {
 	keyDir := "../keys/eth"
 	cas := chainClient.LoadChainAccount(iWantCnt, keyDir)
 	if len(cas.Accounts()) != iWantCnt {
-		color.Warn.Println("create account error: number of account is not equal to iWantCnt.")
+		color.Warn.Println("\ncreate account error: number of account is not equal to iWantCnt.")
 		os.Exit(0)
 	}
+	util.Confirm()
+
 	// save address file
 
 	// save keystore file

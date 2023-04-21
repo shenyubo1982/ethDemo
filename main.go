@@ -17,6 +17,7 @@ func main() {
 
 func startProgram() {
 	for true {
+		menu.ClearScreen()
 		menu.ShowMenu()
 		menuNmu, err := menu.SelectFunc()
 		if err != nil {
