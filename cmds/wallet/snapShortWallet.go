@@ -1,6 +1,7 @@
 package wallet
 
 import (
+	"bufio"
 	"errors"
 	"ethDemo/cmds/km"
 	"ethDemo/etherscanClient"
@@ -129,8 +130,15 @@ func Run() {
 	successRows, fileName := snapshotAddress(client, myWalletConfig.YamlContent.WalletSnapShotDir)
 	if successRows > 0 {
 		// 写入成功
-		color.Success.Printf("snapShort success Records:【%d】\n", successRows)
+		color.Success.Printf("\nsnapShort success Records:【%d】\n", successRows)
 		color.Success.Printf("snapshot file: %s\n", fileName)
+		//等等确认.
+		color.Red.Print("please enter any key to Exit.")
+		reader := bufio.NewReader(os.Stdin)
+		_, err := reader.ReadString('\n')
+		if err != nil {
+			color.Warn.Println("input error.")
+		}
 	}
 }
 

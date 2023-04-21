@@ -1,6 +1,7 @@
 package etherscanClient
 
 import (
+	"ethDemo/util"
 	"github.com/nanmu42/etherscan-api"
 	"math"
 	"math/big"
@@ -75,6 +76,16 @@ func (sm *ScanManage) NewWallet(addresses []string) {
 	walletSize := len(addresses)
 
 	sm.wallet = make(map[string]string, walletSize)
+	// todo add progressbar UI start
+	bar := util.ProgressBarConfig(walletSize, "Scanning Address and report csv ...", 1, 1)
+	//bar := progressbar.Default(int64(walletSize), "Importing wallet")
+
+	//for i := 0; i < 100; i++ {
+	//	bar.Add(1)
+	//	time.Sleep(40 * time.Millisecond)
+	//}
+	// todo add progressbar UI end
+
 	var apiCallCount = 0
 	for _, address := range addresses {
 		balance := sm.getAccountBalance(address)
@@ -87,6 +98,10 @@ func (sm *ScanManage) NewWallet(addresses []string) {
 			time.Sleep(1 * time.Second)
 			apiCallCount = 0
 		}
+		// progressbar ++
+		//bar.Add(1)
+		util.ShowProgressBar(bar)
+
 	}
 }
 

@@ -32,17 +32,6 @@ const (
 	AccountCreate
 	walletManager
 	//lesson02
-	//lesson03
-	//lesson04
-	//lesson05
-	//lesson06
-	//lesson07
-	//lesson08
-	//lesson09
-	//lesson10
-	//lesson11
-	//lesson12
-	//lesson13
 )
 
 const demoStart = "==========Start==========\n"
@@ -58,30 +47,6 @@ func (m MenuContent) String() string {
 		return "KeyStore Manager"
 	case walletManager:
 		return "snapshot Wallet"
-		//case lesson01:
-		//	return "Say hello"
-		//case lesson02:
-		//	return "Guess Game"
-		//case lesson03:
-		//	return "Function Learning"
-		//case lesson04:
-		//	return "ToDo 04"
-		//case lesson05:
-		//	return "ToDo 05"
-		//case lesson06:
-		//	return "ToDo 06"
-		//case lesson07:
-		//	return "ToDo 07"
-		//case lesson08:
-		//	return "ToDo 08"
-		//case lesson09:
-		//	return "ToDo 09"
-		//case lesson10:
-		//	return "ToDo 10"
-		//case lesson11:
-		//	return "ToDo 11"
-		//case lesson12:
-		//	return "ToDo 12"
 		//case lesson13:
 		//	return "goRoutine Learning"
 	}
@@ -134,8 +99,9 @@ func OrderMenu(m MenuContent) {
 	case AccountCreate:
 		doFunc(ac.Run)
 	case walletManager:
+		//doFunc(wm.Run)
 		doFunc(wm.Run)
-		//	//doFunc(l2.Play)
+		//	//doFunc(l3.Play)
 		//case lesson03:
 		//	//doFunc(l3.Do)
 		//case lesson13:
@@ -149,10 +115,8 @@ func doFunc(a func()) {
 	color.BgBlue.Printf(demoStart)
 	a()
 	color.BgBlue.Printf(demoEnd)
-	time.Sleep(300 * time.Millisecond)
-	reader := bufio.NewReader(os.Stdin)
-	_, _ = reader.ReadString('\n')
 	ClearScreen()
+
 }
 
 var clear map[string]func() //create a map for storing clear funcs

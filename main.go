@@ -11,6 +11,11 @@ import (
 //
 func main() {
 
+	startProgram()
+
+}
+
+func startProgram() {
 	for true {
 		menu.ShowMenu()
 		menuNmu, err := menu.SelectFunc()
@@ -32,4 +37,5 @@ func main() {
 		}
 	}
 	//lesson01.SayHello()
+
 }
