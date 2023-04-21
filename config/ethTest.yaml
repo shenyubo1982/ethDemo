@@ -1,8 +1,0 @@
-chainUrl: https://infura.io/dashboard/ethereum/3f97ae7214cc4e2794bee5bdc3bd6b95/settings
-contractAddressHex:
-adminAddressHex: 0x71c7656ec7ab88b098defb751b7401b5f6d8976f
-adminPrivateKeyHex:
-chainID: 77
-abi:
-gasLimit :
-gasPrice :
