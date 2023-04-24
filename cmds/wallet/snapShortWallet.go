@@ -2,7 +2,6 @@ package wallet
 
 import (
 	"errors"
-	"ethDemo/cmds/km"
 	"ethDemo/etherscanClient"
 	"ethDemo/util"
 	"fmt"
@@ -80,11 +79,11 @@ type myWallet struct {
 func newWallet(keystorePath string) *myWallet {
 	//todo read keyStorePath and initialize accounts
 
-	keyMenu := km.ReadFiles(keystorePath)
-	if keyMenu == nil {
-		color.Warn.Println("keyStorePath is not exist.")
-		os.Exit(1)
-	}
+	//keyMenu := km.InitKeyManagerMenu(keystorePath)
+	//if keyMenu == nil {
+	//	color.Warn.Println("keyStorePath is not exist.")
+	//	os.Exit(1)
+	//}
 
 	for i := 0; i < 10; i++ {
 		//todo new walletAccount
